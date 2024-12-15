@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
 import { z } from "zod";
-import bcrypt from "bcrypt";
+// import bcrypt from "bcrypt";
 
 const mockUser = {
   id: "123",
@@ -26,14 +26,15 @@ export const { auth, signIn, signOut } = NextAuth({
           const { email, password } = parsedCredentials.data;
 
           if (email === mockUser.email) {
-            const passwordsMatch = await bcrypt.compare(
-              password,
-              mockUser.password
-            );
+            // const passwordsMatch = await bcrypt.compare(
+            //   password,
+            //   mockUser.password
+            // );
 
-            if (passwordsMatch) {
-              return mockUser;
-            }
+            return mockUser;
+
+            // if (passwordsMatch) {
+            // }
           }
         }
 
