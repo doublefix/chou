@@ -1,4 +1,4 @@
-import LoginPage from "@/components/login/simple-page";
+import LoginPage from "@/components/login/simple";
 export function Page() {
   return <LoginPage />;
 }
