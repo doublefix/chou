@@ -1,6 +1,6 @@
-import TwoColumn from "@/components/login/two-column-login-page";
+import LoginPage from "@/components/login/simple-page";
 export function Page() {
-  return <TwoColumn />;
+  return <LoginPage />;
 }
 
 export default Page;
