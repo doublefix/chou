@@ -51,10 +51,12 @@ export function LoginForm() {
               </div>
               <Input id="password" name="password" type="password" required />
             </div>
-            {/* <Button type="submit" className="w-full">
-              Login
-            </Button> */}
             <LoginButton />
+            {errorMessage && (
+              <>
+                <p className="text-sm text-red-500">{errorMessage}</p>
+              </>
+            )}
             <Button variant="outline" className="w-full">
               Login with Google
             </Button>

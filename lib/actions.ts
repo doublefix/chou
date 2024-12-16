@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+
 export async function authenticate(
   prevState: string | undefined,
   formData: FormData
@@ -11,8 +13,13 @@ export async function authenticate(
     console.log(formObject.password)
 
     // 模拟调用后端接口假设成功了
-    
-    return "/";
+    const loginSuccessful = true;
+
+    if (loginSuccessful) {
+      redirect('/');
+    } else {
+      return '登录失败，请检查您的凭证。';
+    }
   } catch (error) {
     throw error;
   }
