@@ -1,4 +1,4 @@
-async function authenticate(formData: FormData) {
+export async function authenticate(formData: FormData) {
   const formObject: { [key: string]: string } = {};
   formData.forEach((value, key) => {
     formObject[key] = value as string;

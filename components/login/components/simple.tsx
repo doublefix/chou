@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFormStatus } from "react-dom";
 import { useState } from "react";
+import { authenticate } from "@/lib/actions";
 
 export function LoginForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
