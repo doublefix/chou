@@ -35,8 +35,12 @@ export function LoginForm() {
         setErrorMessage(null);
         router.push(result.redirect);
       }
-    } catch (error: any) {
-      setErrorMessage(error.message || "登录失败，请联系管理员。");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message || "登录失败，请联系管理员。");
+      } else {
+        setErrorMessage("登录失败，请联系管理员。");
+      }
     } finally {
       setPending(false);
     }
