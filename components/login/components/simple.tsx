@@ -1,7 +1,8 @@
 "use client";
 
+import { mutate } from "swr";
 import Link from "next/link";
-
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,12 +13,52 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {useFormStatus } from 'react-dom'
-import { useActionState } from 'react';
-import { authenticate } from '@/lib/actions'
+import { useFormStatus } from "react-dom";
+import { useState } from "react";
+
+async function authenticate(formData: FormData) {
+  const formObject: { [key: string]: string } = {};
+  formData.forEach((value, key) => {
+    formObject[key] = value as string;
+  });
+
+  const response = await fetch("/api/v1/token/access", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      uname: formObject.email,
+      passwd: formObject.password,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("登录失败，请检查您的凭证。");
+  }
+
+  return await response.json();
+}
 
 export function LoginForm() {
-  const [errorMessage, dispatch] = useActionState(authenticate, undefined)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { pending } = useFormStatus();
+  const router = useRouter();
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage(null);
+
+    const formData = new FormData(event.currentTarget);
+
+    try {
+      const result = await mutate("/api/v1/token/access", () => authenticate(formData));
+      if (result?.redirect) {
+        router.push(result.redirect);
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || "登录失败");
+    }
+  }
+
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
@@ -27,7 +68,7 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={dispatch}>
+        <form onSubmit={handleSubmit}>
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -51,11 +92,11 @@ export function LoginForm() {
               </div>
               <Input id="password" name="password" type="password" required />
             </div>
-            <LoginButton />
+            <Button type="submit" className="w-full" disabled={pending}>
+              {pending ? "登录中..." : "登录"}
+            </Button>
             {errorMessage && (
-              <>
-                <p className="text-sm text-red-500">{errorMessage}</p>
-              </>
+              <p className="text-sm text-red-500">{errorMessage}</p>
             )}
             <Button variant="outline" className="w-full">
               Login with Google
@@ -71,14 +112,4 @@ export function LoginForm() {
       </CardContent>
     </Card>
   );
-}
-
-function LoginButton() {
-  const { pending } = useFormStatus()
-
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? '登录中...' : '登录'}
-    </Button>
-  )
 }
