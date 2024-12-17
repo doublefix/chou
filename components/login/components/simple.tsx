@@ -16,28 +16,6 @@ import { Label } from "@/components/ui/label";
 import { useFormStatus } from "react-dom";
 import { useState } from "react";
 
-async function authenticate(formData: FormData) {
-  const formObject: { [key: string]: string } = {};
-  formData.forEach((value, key) => {
-    formObject[key] = value as string;
-  });
-
-  const response = await fetch("/api/v1/token/access", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      uname: formObject.email,
-      passwd: formObject.password,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error("登录失败，请检查您的凭证。");
-  }
-
-  return await response.json();
-}
-
 export function LoginForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { pending } = useFormStatus();
@@ -55,7 +33,7 @@ export function LoginForm() {
         router.push(result.redirect);
       }
     } catch (error: any) {
-      setErrorMessage(error.message || "登录失败");
+      setErrorMessage(error.message || "登录失败，请联系管理员。");
     }
   }
 

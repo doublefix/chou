@@ -1,7 +1,4 @@
-export async function authenticate(
-  prevState: string | undefined,
-  formData: FormData
-) {
+async function authenticate(formData: FormData) {
   const formObject: { [key: string]: string } = {};
   formData.forEach((value, key) => {
     formObject[key] = value as string;
@@ -16,12 +13,9 @@ export async function authenticate(
     }),
   });
 
-  if (response.ok) {
-    const data = await response.json();
-    if (data.redirect) {
-      window.location.href = data.redirect;
-    }
-  } else {
-    return "登录失败，请检查您的凭证。";
+  if (!response.ok) {
+    throw new Error("登录失败，请检查您的凭证。");
   }
+
+  return await response.json();
 }
