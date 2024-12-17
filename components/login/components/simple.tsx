@@ -13,28 +13,32 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useFormStatus } from "react-dom";
 import { useState } from "react";
 import { authenticate } from "@/lib/actions";
 
 export function LoginForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { pending } = useFormStatus();
+  const [pending, setPending] = useState<boolean>(false);
   const router = useRouter();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setErrorMessage(null);
+    setPending(true);
 
     const formData = new FormData(event.currentTarget);
 
     try {
-      const result = await mutate("/api/v1/token/access", () => authenticate(formData));
+      const result = await mutate("/api/v1/token/access", () =>
+        authenticate(formData)
+      );
       if (result?.redirect) {
+        setErrorMessage(null);
         router.push(result.redirect);
       }
     } catch (error: any) {
       setErrorMessage(error.message || "登录失败，请联系管理员。");
+    } finally {
+      setPending(false);
     }
   }
 
@@ -71,12 +75,12 @@ export function LoginForm() {
               </div>
               <Input id="password" name="password" type="password" required />
             </div>
-            <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? "登录中..." : "登录"}
-            </Button>
             {errorMessage && (
               <p className="text-sm text-red-500">{errorMessage}</p>
             )}
+            <Button type="submit" className="w-full" disabled={pending}>
+              {pending ? "登录中..." : "登录"}
+            </Button>
             <Button variant="outline" className="w-full">
               Login with Google
             </Button>
