@@ -58,7 +58,7 @@ export function LoginForm() {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Username or email</Label>
+              <Label htmlFor="email">Username or Email address</Label>
               <Input
                 id="identifier"
                 name="identifier"
