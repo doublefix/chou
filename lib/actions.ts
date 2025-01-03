@@ -8,8 +8,8 @@ export async function authenticate(formData: FormData) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      uname: formObject.email,
-      passwd: formObject.password,
+      identifier: formObject.email,
+      password: formObject.password,
     }),
   });
 
