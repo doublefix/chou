@@ -10,7 +10,7 @@ export async function authenticate(formData: FormData) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      identifier: formObject.email,
+      identifier: formObject.identifier,
       password: formObject.password,
     }),
   });
