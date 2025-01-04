@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { authenticate } from "@/lib/actions";
 
-export function LoginForm() {
+export function JoinForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pending, setPending] = useState<boolean>(false);
   const router = useRouter();
@@ -49,16 +49,16 @@ export function LoginForm() {
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
-        <CardTitle className="text-2xl">Login</CardTitle>
+        <CardTitle className="text-2xl">Join</CardTitle>
         <CardDescription>
-          Enter your email below to login to your account
+          Enter your email below to create new account
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Username or Email address</Label>
+              <Label htmlFor="email">Email address</Label>
               <Input
                 id="identifier"
                 name="identifier"
@@ -70,12 +70,6 @@ export function LoginForm() {
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
-                <Link
-                  href="#"
-                  className="ml-auto inline-block text-sm underline"
-                >
-                  Forgot your password?
-                </Link>
               </div>
               <Input id="password" name="password" type="password" required />
             </div>
@@ -83,16 +77,13 @@ export function LoginForm() {
               <p className="text-sm text-red-500">{errorMessage}</p>
             )}
             <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? "登录中..." : "登录"}
-            </Button>
-            <Button variant="outline" className="w-full">
-              Login with Google
+              {pending ? "注册中..." : "注册"}
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/join" className="underline">
-              Sign up
+            Already have an account?{" "}
+            <Link href="/login" className="underline">
+              Log in
             </Link>
           </div>
         </form>
