@@ -22,6 +22,28 @@ export async function authenticate(formData: FormData) {
   return await response.json();
 }
 
+export async function join(formData: FormData) {
+  const formObject: { [key: string]: string } = {};
+  formData.forEach((value, key) => {
+    formObject[key] = value as string;
+  });
+
+  const response = await fetch("/api/v1/join", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: formObject.email,
+      password: formObject.password,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("登录失败，请检查您的凭证。");
+  }
+
+  return await response.json();
+}
+
 // Todo: Token 刷新机制、前端路由保护
 export const fetcher = async (
   url: string,

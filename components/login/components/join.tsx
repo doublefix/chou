@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { authenticate } from "@/lib/actions";
+import { join } from "@/lib/actions";
 
 export function JoinForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -28,18 +28,14 @@ export function JoinForm() {
     const formData = new FormData(event.currentTarget);
 
     try {
-      const result = await mutate("/api/v1/token/access", () =>
-        authenticate(formData)
+      const result = await mutate("/api/v1/join", () =>
+        join(formData)
       );
-      if (result?.redirect) {
-        setErrorMessage(null);
-        router.push(result.redirect);
-      }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setErrorMessage(error.message || "登录失败，请联系管理员。");
+        setErrorMessage(error.message || "注册失败，请联系管理员。");
       } else {
-        setErrorMessage("登录失败，请联系管理员。");
+        setErrorMessage("注册失败，请联系管理员。");
       }
     } finally {
       setPending(false);
@@ -60,9 +56,9 @@ export function JoinForm() {
             <div className="grid gap-2">
               <Label htmlFor="email">Email address</Label>
               <Input
-                id="identifier"
-                name="identifier"
-                type="identifier"
+                id="email"
+                name="email"
+                type="email"
                 placeholder="test@example.com"
                 required
               />
