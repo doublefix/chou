@@ -19,7 +19,6 @@ import { join } from "@/lib/actions";
 export function JoinForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pending, setPending] = useState<boolean>(false);
-  const router = useRouter();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,15 +27,20 @@ export function JoinForm() {
     const formData = new FormData(event.currentTarget);
 
     try {
-      const result = await mutate("/api/v1/join", () =>
-        join(formData)
-      );
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setErrorMessage(error.message || "注册失败，请联系管理员。");
-      } else {
-        setErrorMessage("注册失败，请联系管理员。");
+      const result = await mutate("/api/v1/join", () => join(formData));
+
+      if (result.code === 2001000) {
+        console.log("注册成功");
+        setErrorMessage(null);
+        return;
       }
+      setErrorMessage(result.message || "注册失败，请稍后重试。");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message || "注册失败，请联系管理员。"
+          : "注册失败，请联系管理员。";
+      setErrorMessage(errorMessage);
     } finally {
       setPending(false);
     }

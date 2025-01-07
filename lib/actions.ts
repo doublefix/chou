@@ -37,10 +37,6 @@ export async function join(formData: FormData) {
     }),
   });
 
-  if (!response.ok) {
-    throw new Error("登录失败，请检查您的凭证。");
-  }
-
   return await response.json();
 }
 
