@@ -68,15 +68,15 @@ export function JoinForm() {
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-              </div>
-              <Input id="password" name="password" type="password" required />
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
                 <Label htmlFor="username">Username</Label>
               </div>
               <Input id="username" name="username" type="username" required />
+            </div>
+            <div className="grid gap-2">
+              <div className="flex items-center">
+                <Label htmlFor="password">Password</Label>
+              </div>
+              <Input id="password" name="password" type="password" required />
             </div>
             {errorMessage && (
               <p className="text-sm text-red-500">{errorMessage}</p>
