@@ -17,6 +17,7 @@ import { useState } from "react";
 import { join } from "@/lib/actions";
 
 export function JoinForm() {
+  const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pending, setPending] = useState<boolean>(false);
 
@@ -31,6 +32,10 @@ export function JoinForm() {
 
       if (result.code === 2001000) {
         setErrorMessage(null);
+        const redirectPath = result.data?.[0]?.redirect;
+        if (redirectPath) {
+          router.push(redirectPath);
+        }
         return;
       }
       setErrorMessage(result.message || "注册失败，请稍后重试。");
