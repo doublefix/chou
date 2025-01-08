@@ -28,13 +28,19 @@ export async function join(formData: FormData) {
     formObject[key] = value as string;
   });
 
+  const requestBody: { [key: string]: string } = {
+    email: formObject.email,
+    password: formObject.password,
+  };
+
+  if (formObject.username && formObject.username.trim() !== "") {
+    requestBody.username = formObject.username; // 只有非空字符串时添加 username
+  }
+
   const response = await fetch("/api/v1/join", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: formObject.email,
-      password: formObject.password,
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   return await response.json();
