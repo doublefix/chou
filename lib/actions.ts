@@ -49,7 +49,7 @@ export async function join(formData: FormData) {
 export async function checkAvailability(fields: Record<string, string>) {
   const query = new URLSearchParams(fields).toString();
   try {
-    const response = await fetch(`/api/v1/availabe?${query}`);
+    const response = await fetch(`/api/v1/users/availability?${query}`);
     if (!response.ok) {
       throw new Error(`Failed to check availability: ${response.statusText}`);
     }

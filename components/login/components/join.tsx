@@ -106,10 +106,6 @@ export function JoinForm() {
     return null; // 校验通过返回 null
   }
 
-  const handleLoginRedirect = () => {
-    router.push("/login");
-  };
-
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>

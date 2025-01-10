@@ -86,7 +86,7 @@ export function LoginForm() {
               {pending ? "登录中..." : "登录"}
             </Button>
             <Button variant="outline" className="w-full">
-              Login with Google
+              手机号登录
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">
