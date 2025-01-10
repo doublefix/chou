@@ -14,12 +14,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { join } from "@/lib/actions";
+import { join, checkAvailability } from "@/lib/actions";
 
 export function JoinForm() {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pending, setPending] = useState<boolean>(false);
+  const [availability, setAvailability] = useState<{
+    email_available?: boolean;
+    username_available?: boolean;
+    phone_available?: boolean;
+  }>({});
+  const [checking, setChecking] = useState<boolean>(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -50,37 +56,80 @@ export function JoinForm() {
     }
   }
 
+  async function handleCheck(field: string, value: string) {
+    if (!value.trim()) {
+      // 如果值为空字符串或仅包含空格，直接返回
+      setAvailability((prev) => ({
+        ...prev,
+        [`${field}_available`]: undefined,
+      }));
+      return;
+    }
+
+    setChecking(true);
+    try {
+      const result = await checkAvailability({ [field]: value });
+      setAvailability((prev) => ({ ...prev, ...result }));
+    } catch (error) {
+      console.error(`Error checking ${field} availability:`, error);
+    } finally {
+      setChecking(false);
+    }
+  }
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
         <CardTitle className="text-2xl">Join</CardTitle>
         <CardDescription>
-          Enter your email below to create new account
+        Enter your email below to create a new account and get started!
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email">Email address*</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
                 placeholder="test@example.com"
                 required
+                onBlur={(e) => handleCheck("email", e.target.value)}
               />
+              {availability.email_available === false && (
+                <p className="text-sm text-red-500">
+                  Email is not available.
+                </p>
+              )}
+              {availability.email_available === true && (
+                <p className="text-sm text-green-500">
+                  Email is available
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="username">Username</Label>
-              </div>
-              <Input id="username" name="username" type="username" required />
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                name="username"
+                type="text"
+                required
+                onBlur={(e) => handleCheck("username", e.target.value)}
+              />
+              {availability.username_available === false && (
+                <p className="text-sm text-red-500">
+                  Username is not available.
+                </p>
+              )}
+              {availability.username_available === true && (
+                <p className="text-sm text-green-500">
+                  Username is available.
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-              </div>
+              <Label htmlFor="password">Password*</Label>
               <Input id="password" name="password" type="password" required />
             </div>
             {errorMessage && (

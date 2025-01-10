@@ -46,6 +46,20 @@ export async function join(formData: FormData) {
   return await response.json();
 }
 
+export async function checkAvailability(fields: Record<string, string>) {
+  const query = new URLSearchParams(fields).toString();
+  try {
+    const response = await fetch(`/api/v1/availabe?${query}`);
+    if (!response.ok) {
+      throw new Error(`Failed to check availability: ${response.statusText}`);
+    }
+    return await response.json(); // 返回完整响应体
+  } catch (error) {
+    console.error("Error checking availability:", error);
+    throw error;
+  }
+}
+
 // Todo: Token 刷新机制、前端路由保护
 export const fetcher = async (
   url: string,
