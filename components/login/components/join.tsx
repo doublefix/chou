@@ -19,6 +19,9 @@ import { join, checkAvailability } from "@/lib/actions";
 export function JoinForm() {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [passwordValidationMessage, setPasswordValidationMessage] = useState<
+    string | null
+  >(null);
   const [pending, setPending] = useState<boolean>(false);
   const [availability, setAvailability] = useState<{
     email_available?: boolean;
@@ -76,12 +79,43 @@ export function JoinForm() {
       setChecking(false);
     }
   }
+
+  function validatePassword(password: string): string | null {
+    if (!password.trim()) {
+      // 如果密码是空字符串或仅包含空格，直接返回 null，不进行校验
+      return null;
+    }
+    if (password.length < 8 || password.length > 16) {
+      return "Password must be between 8 and 16 characters.";
+    }
+    if (/\s/.test(password)) {
+      return "Password cannot contain any spaces.";
+    }
+    if (!/[A-Z]/.test(password)) {
+      return "Password must include at least one uppercase letter.";
+    }
+    if (!/[a-z]/.test(password)) {
+      return "Password must include at least one lowercase letter.";
+    }
+    if (!/[0-9]/.test(password)) {
+      return "Password must include at least one number.";
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return "Password must include at least one special character.";
+    }
+    return null; // 校验通过返回 null
+  }
+
+  const handleLoginRedirect = () => {
+    router.push("/login");
+  };
+
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
         <CardTitle className="text-2xl">Join</CardTitle>
         <CardDescription>
-        Enter your email below to create a new account and get started!
+          Enter your email below to create a new account and get started!
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -98,14 +132,10 @@ export function JoinForm() {
                 onBlur={(e) => handleCheck("email", e.target.value)}
               />
               {availability.email_available === false && (
-                <p className="text-sm text-red-500">
-                  Email is not available.
-                </p>
+                <p className="text-sm text-red-500">Email is not available.</p>
               )}
               {availability.email_available === true && (
-                <p className="text-sm text-green-500">
-                  Email is available
-                </p>
+                <p className="text-sm text-green-500">Email is available</p>
               )}
             </div>
             <div className="grid gap-2">
@@ -123,14 +153,27 @@ export function JoinForm() {
                 </p>
               )}
               {availability.username_available === true && (
-                <p className="text-sm text-green-500">
-                  Username is available.
-                </p>
+                <p className="text-sm text-green-500">Username is available.</p>
               )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password*</Label>
-              <Input id="password" name="password" type="password" required />
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const message = validatePassword(value);
+                  setPasswordValidationMessage(message);
+                }}
+              />
+              {passwordValidationMessage && (
+                <p className="text-sm text-red-500">
+                  {passwordValidationMessage}
+                </p>
+              )}
             </div>
             {errorMessage && (
               <p className="text-sm text-red-500">{errorMessage}</p>
