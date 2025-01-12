@@ -86,3 +86,8 @@ server {
   }
 }
 ```
+
+
+## 项目部署
+http+https+ci
+https://stackoverflow.com/questions/64386737/how-to-deploy-nextjs-with-nginx
