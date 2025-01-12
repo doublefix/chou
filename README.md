@@ -52,6 +52,8 @@ https://ui.shadcn.com/docs/components/sidebar#structure
 # 路由参考
 https://app-router.vercel.app/
 
+# 状态管理 zustand
+
 # Test
 
 # 调用接口401就返回到login
@@ -60,4 +62,6 @@ https://app-router.vercel.app/
 
 # 这两种方式可以结合使用，确保用户只有在登录后才可以访问受保护的页面，而没有登录的用户会被引导到登录页。这样，既能提高系统的安全性，又能确保用户体验的流畅性。
 
+
+# 我现在有很多路由，有些用户能访问有些用户不能访问，是不是得这样，我登录的时候后端返回出不能访问的路由让web存起来，然后实现不同用户有不同的路由权限。这种方式合理吗，符合不符合规范，优雅不优雅
 ```
