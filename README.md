@@ -60,8 +60,29 @@ https://app-router.vercel.app/
 # 	1.	后端返回 401：当后端检测到 Token 无效 或 过期 时，返回 401 错误，前端捕获后跳转到登录页面。
 # 	2.	前端 Token 检查：前端在每次加载受保护页面时，检查 Token 是否存在 和 有效性，如果无效则跳转到登录页面。
 
-# 这两种方式可以结合使用，确保用户只有在登录后才可以访问受保护的页面，而没有登录的用户会被引导到登录页。这样，既能提高系统的安全性，又能确保用户体验的流畅性。
+#  前端：nextjs,后端：nextjs+nodejs,gin
+# 在未渲染之前询问后端是否拥有权限进行渲染，后端的这个接口做redis缓存优化,前端使用zustand做缓存优化
+# SSR,CSR,SEO
+# SSR 可以在服务器端生成完整的 HTML 页面，这对于搜索引擎爬虫来说非常友好，因为它们通常不能执行 JavaScript 代码。如果页面在服务器端渲染，爬虫就能直接读取到完整的内容，提升 SEO 排名。
+# 在 Next.js 服务端渲染（SSR） 阶段向后端询问用户权限，并基于返回的结果决定是否渲染页面，是符合 Next.js 和 前端业界规范 的，同时也符合前后端分离的常见实践。
 
+server {
+  listen 80;
+  server_name yourdomain.com;
 
-# 我现在有很多路由，有些用户能访问有些用户不能访问，是不是得这样，我登录的时候后端返回出不能访问的路由让web存起来，然后实现不同用户有不同的路由权限。这种方式合理吗，符合不符合规范，优雅不优雅
+  # Static files from Next.js export
+  location / {
+    root /path/to/your/nextjs/out;
+    try_files $uri $uri/ /index.html;
+  }
+
+  # Proxy API and SSR requests
+  location /_next/ {
+    proxy_pass http://localhost:3000;  # Next.js Node.js server
+  }
+  
+  location /api/ {
+    proxy_pass http://localhost:3000;  # API Gin
+  }
+}
 ```

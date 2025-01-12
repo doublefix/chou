@@ -28,6 +28,7 @@ export function JoinForm() {
     username_available?: boolean;
     phone_available?: boolean;
   }>({});
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   const [checking, setChecking] = useState<boolean>(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

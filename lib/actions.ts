@@ -1,4 +1,4 @@
-import { getAuthContext } from "../components/auth-context";
+import { useAuthContext } from "../components/auth-context";
 
 export async function authenticate(formData: FormData) {
   const formObject: { [key: string]: string } = {};
@@ -61,14 +61,14 @@ export async function checkAvailability(fields: Record<string, string>) {
 }
 
 // Todo: Token 刷新机制、前端路由保护
-export const fetcher = async (
+export const fetcher = async<T> (
   url: string,
   options: RequestInit = {}, // 允许传入配置选项
   params?: Record<string, string>, // 可选的查询参数
-  body?: any // 可选的请求体
+  body?: T // 可选的请求体
 ) => {
   // 获取 AuthContext 中的 redirectToLogin 方法
-  const { redirectToLogin } = getAuthContext();
+  const { redirectToLogin } = useAuthContext();
 
   // 处理查询参数
   const urlWithParams = new URL(url);
