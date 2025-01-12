@@ -1,4 +1,3 @@
-import { AuthProvider } from "../components/auth-context";
 import type { Metadata } from "next";
 import { cn } from "@/lib/utils";
 import { fontMono, fontSans } from "@/lib/fonts";
@@ -26,7 +25,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <AuthProvider>
       <html lang="en">
         <body
           className={cn(
@@ -38,6 +36,5 @@ export default function RootLayout({
           {children}
         </body>
       </html>
-    </AuthProvider>
   );
 }

@@ -1,5 +1,3 @@
-import { useAuthContext } from "../components/auth-context";
-
 export async function authenticate(formData: FormData) {
   const formObject: { [key: string]: string } = {};
   formData.forEach((value, key) => {
@@ -68,7 +66,7 @@ export const fetcher = async<T> (
   body?: T // 可选的请求体
 ) => {
   // 获取 AuthContext 中的 redirectToLogin 方法
-  const { redirectToLogin } = useAuthContext();
+  // const { redirectToLogin } = useAuthContext();
 
   // 处理查询参数
   const urlWithParams = new URL(url);
@@ -96,7 +94,6 @@ export const fetcher = async<T> (
 
     if (res.status === 401) {
       // 401 错误时跳转到登录页面
-      redirectToLogin();
     }
 
     if (!res.ok) {
