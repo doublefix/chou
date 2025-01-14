@@ -44,6 +44,29 @@ export async function join(formData: FormData) {
   return await response.json();
 }
 
+export const logout = async (): Promise<{
+  success: boolean;
+  redirect?: string;
+}> => {
+  try {
+    const response = await fetch("/api/v1/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      console.error("Failed to log out:", response.statusText);
+      return { success: false };
+    }
+
+    const data = await response.json();
+    return { success: true, redirect: data.redirect };
+  } catch (error) {
+    console.error("Error logging out:", error);
+    return { success: false };
+  }
+};
+
 export async function checkAvailability(fields: Record<string, string>) {
   const query = new URLSearchParams(fields).toString();
   try {
@@ -59,7 +82,7 @@ export async function checkAvailability(fields: Record<string, string>) {
 }
 
 // Todo: Token 刷新机制、前端路由保护
-export const fetcher = async<T> (
+export const fetcher = async <T>(
   url: string,
   options: RequestInit = {}, // 允许传入配置选项
   params?: Record<string, string>, // 可选的查询参数
