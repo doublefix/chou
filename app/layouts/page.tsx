@@ -1,12 +1,27 @@
-import React from "react";
+import { ExternalLink } from "@/components/ui/test/external-link";
 
-const HomePage = () => {
+export default function Page() {
   return (
-    <main style={{ padding: "20px", textAlign: "center" }}>
-      <h1>欢迎来到我的 Next.js 应用！</h1>
-      <p>这是一个简单的示例页面。</p>
-    </main>
-  );
-};
+    <div className="prose prose-sm prose-invert max-w-none">
+      <h1 className="text-xl font-bold">Layouts</h1>
 
-export default HomePage;
+      <ul>
+        <li>
+          A layout is UI that is shared between multiple pages. On navigation,
+          layouts preserve state, remain interactive, and do not re-render. Two
+          or more layouts can also be nested.
+        </li>
+        <li>Try navigating between categories and sub categories.</li>
+      </ul>
+
+      <div className="flex gap-2">
+        <ExternalLink href="https://nextjs.org/docs/app/building-your-application/routing/pages-and-layouts">
+          Docs
+        </ExternalLink>
+        <ExternalLink href="https://github.com/vercel/app-playground/tree/main/app/layouts">
+          Code
+        </ExternalLink>
+      </div>
+    </div>
+  );
+}
