@@ -65,6 +65,7 @@ https://app-router.vercel.app/
 # SSR,CSR,SEO
 # SSR 可以在服务器端生成完整的 HTML 页面，这对于搜索引擎爬虫来说非常友好，因为它们通常不能执行 JavaScript 代码。如果页面在服务器端渲染，爬虫就能直接读取到完整的内容，提升 SEO 排名。
 # 在 Next.js 服务端渲染（SSR） 阶段向后端询问用户权限，并基于返回的结果决定是否渲染页面，是符合 Next.js 和 前端业界规范 的，同时也符合前后端分离的常见实践。
+# 无感刷新token
 
 server {
   listen 80;
