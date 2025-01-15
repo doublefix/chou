@@ -27,11 +27,17 @@ export const Tab = ({
   return (
     <Link
       href={href}
-      className={clsx("rounded-lg px-3 py-1 text-sm font-medium", {
-        "bg-gray-700 text-gray-100 hover:bg-gray-500 hover:text-white":
-          !isActive,
-        "bg-vercel-blue text-white": isActive,
-      })}
+      className={clsx(
+        "rounded-lg px-4 py-2 text-sm font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+        {
+          // Active state
+          "bg-gradient-to-r from-blue-500 to-teal-500 text-white shadow-md hover:from-blue-600 hover:to-teal-600":
+            isActive,
+          // Inactive state
+          "bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-900":
+            !isActive,
+        }
+      )}
     >
       {item.text}
     </Link>
