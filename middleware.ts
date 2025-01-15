@@ -14,34 +14,55 @@ export const config = {
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const response = NextResponse.next();
 
-  // 从 Cookie 中获取 access_token
-  const token = request.cookies.get("access_token")?.value;
+  const accessToken = request.cookies.get("access_token")?.value;
+  const refreshToken = request.cookies.get("refresh_token")?.value;
   let isExpired = true;
 
-  if (token) {
+  if (accessToken) {
     try {
-      isExpired = await checkTokenExpiration(token);
+      isExpired = await checkTokenExpiration(accessToken);
     } catch (err) {
       console.error("Failed to decode token:", err);
     }
   }
 
+  if (isExpired && refreshToken) {
+    const data = await fetchTokenDetail(refreshToken);
+    if (data) {
+      // console.log(data);
+      const accessToken = data.access_token;
+      const accessTokenTTL = data.access_token_ttl;
+      const domain = data.domain;
+      response.cookies.set("access_token", accessToken, {
+        maxAge: accessTokenTTL,
+        path: domain,
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+      });
+      isExpired = false;
+    }
+  }
+
   // 未登录用户：保护的页面重定向到 /login
   if (isExpired && pathname !== "/login" && pathname !== "/join") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return redirectTo(request, "/login");
   }
 
   // 已登录用户：不允许访问 /login 和 /join，重定向到首页或其他页面
   if (!isExpired && (pathname === "/login" || pathname === "/join")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    return redirectTo(request, "/dashboard");
   }
 
-  return NextResponse.next();
+  return response;
+}
+
+function redirectTo(request: NextRequest, pathname: string) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  return NextResponse.redirect(url);
 }
 
 async function checkTokenExpiration(token: string): Promise<boolean> {
@@ -61,5 +82,32 @@ async function checkTokenExpiration(token: string): Promise<boolean> {
   } catch (err) {
     console.error("Error checking token expiration:", err);
     return true; // 如果请求失败，默认认为 token 过期
+  }
+}
+
+// 刷新 Token 并设置新的 Cookie
+async function fetchTokenDetail(refreshToken: string): Promise<any> {
+  try {
+    const response = await fetch(
+      "http://localhost:8080/api/v1/token/refresh/detail",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${refreshToken}`,
+        },
+      }
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      console.error("Failed to fetch token detail:", response.status);
+      return null;
+    }
+  } catch (err) {
+    console.error("Error while fetching token detail:", err);
+    return null;
   }
 }
