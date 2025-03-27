@@ -1,3 +1,4 @@
+// app/page.tsx
 import { demos } from "@/lib/demos";
 import Link from "next/link";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
