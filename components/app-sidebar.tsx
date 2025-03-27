@@ -88,6 +88,10 @@ const data = {
           title: "Quantum",
           url: "/home/hooks/electronics",
         },
+        {
+          title: "Simple",
+          url: "/home/simple",
+        },
       ],
     },
     // {
