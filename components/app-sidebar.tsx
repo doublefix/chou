@@ -59,15 +59,15 @@ const data = {
       items: [
         {
           title: "History",
-          url: "#",
+          url: "/home",
         },
         {
           title: "Starred",
-          url: "#",
+          url: "/home/layouts",
         },
         {
           title: "Settings",
-          url: "#",
+          url: "/home/loading",
         },
       ],
     },
@@ -78,15 +78,15 @@ const data = {
       items: [
         {
           title: "Genesis",
-          url: "#",
+          url: "/home/context",
         },
         {
           title: "Explorer",
-          url: "#",
+          url: "/home/patterns",
         },
         {
           title: "Quantum",
-          url: "#",
+          url: "/home/hooks/electronics",
         },
       ],
     },

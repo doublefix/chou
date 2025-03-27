@@ -1,5 +1,5 @@
 import { getCategory } from '@/app/api/categories/getCategories';
-import { HooksClient } from '@/app/hooks/_components/router-context';
+import { HooksClient } from '@/app/home/hooks/_components/router-context';
 
 export default async function Page(props: {
   params: Promise<{ categorySlug: string }>;
