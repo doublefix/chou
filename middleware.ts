@@ -53,7 +53,7 @@ export async function middleware(request: NextRequest) {
 
   // 已登录用户：不允许访问 /login 和 /join，重定向到首页或其他页面
   if (!isExpired && (pathname === "/login" || pathname === "/join")) {
-    return redirectTo(request, "/dashboard");
+    return redirectTo(request, "/home");
   }
 
   return response;
