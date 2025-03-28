@@ -7,6 +7,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { NavActions } from "@/components/nav-actions"
 import { Input } from "@/components/ui/input2";
 import { Search } from "lucide-react";
 import {
@@ -34,6 +35,9 @@ export default function RootLayout({
               placeholder="Search models, datasets, users..."
               className="h-9 w-[360px] pl-10"
             />
+          </div>
+          <div className="ml-auto px-3">
+            <NavActions />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
