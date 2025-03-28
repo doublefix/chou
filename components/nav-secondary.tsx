@@ -12,6 +12,7 @@ import {
 
 export function NavSecondary({
   items,
+  onItemClick, // 新增回调prop
   ...props
 }: {
   items: {
@@ -20,6 +21,7 @@ export function NavSecondary({
     icon: LucideIcon;
     badge?: React.ReactNode;
   }[];
+  onItemClick?: (item: { title: string; url: string }) => void;
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
     <SidebarGroup {...props}>
@@ -27,7 +29,7 @@ export function NavSecondary({
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
+              <SidebarMenuButton asChild onClick={() => onItemClick?.(item)}>
                 <a href={item.url}>
                   <item.icon />
                   <span>{item.title}</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import {
   AudioWaveform,
   BookOpen,
@@ -33,6 +34,7 @@ import { TeamSwitcher } from "@/components/team-switcher";
 import { NavFavorites } from "@/components/nav-favorites";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavWorkspaces } from "@/components/nav-workspaces";
+import { SettingsDialog } from "@/components/settings-dialog";
 import {
   Sidebar,
   SidebarContent,
@@ -367,23 +369,38 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // Open SettingsDialog
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const handleNavItemClick = (item: { title: string; url: string }) => {
+    if (item.title === "Settings") {
+      setSettingsOpen(true);
+    }
+  };
+
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-        <NavMainTop items={data.navMainTop} />
-      </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
-        <NavFavorites favorites={data.favorites} />
-        <NavWorkspaces workspaces={data.workspaces} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
+    <>
+      <Sidebar collapsible="icon" {...props}>
+        <SidebarHeader>
+          <TeamSwitcher teams={data.teams} />
+          <NavMainTop items={data.navMainTop} />
+        </SidebarHeader>
+        <SidebarContent>
+          <NavMain items={data.navMain} />
+          <NavProjects projects={data.projects} />
+          <NavFavorites favorites={data.favorites} />
+          <NavWorkspaces workspaces={data.workspaces} />
+          <NavSecondary
+            items={data.navSecondary}
+            onItemClick={handleNavItemClick}
+            className="mt-auto"
+          />
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUser user={data.user} />
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </>
   );
 }
