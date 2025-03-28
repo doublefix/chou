@@ -12,9 +12,18 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  Blocks,
+  Calendar,
+  Home,
+  Inbox,
+  MessageCircleQuestion,
+  Search,
+  Sparkles,
+  Trash2,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
+import { NavMainTop } from "@/components/nav-main-top";
 import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
@@ -48,6 +57,31 @@ const data = {
       name: "Evil Corp.",
       logo: Command,
       plan: "Free",
+    },
+  ],
+  navMainTop: [
+    {
+      title: "Search",
+      url: "#",
+      icon: Search,
+      // isActive: true,
+    },
+    {
+      title: "Ask AI",
+      url: "#",
+      icon: Sparkles,
+    },
+    {
+      title: "Home",
+      url: "#",
+      icon: Home,
+      // isActive: true,
+    },
+    {
+      title: "Inbox",
+      url: "#",
+      icon: Inbox,
+      badge: "10",
     },
   ],
   navMain: [
@@ -165,6 +199,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
+        <NavMainTop items={data.navMainTop} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
