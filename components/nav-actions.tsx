@@ -102,7 +102,7 @@ export function NavActions() {
   const [isOpen, setIsOpen] = React.useState(false);
 
   React.useEffect(() => {
-    setIsOpen(true);
+    setIsOpen(false);
   }, []);
 
   return (
@@ -110,7 +110,7 @@ export function NavActions() {
       <div className="hidden font-medium text-muted-foreground md:inline-block">
         Edit Oct 08
       </div>
-      <Button variant="ghost" size="icon" className="h-7 w-7">
+      <Button variant="ghost" size="icon" className="h-4 w-4">
         <Star />
       </Button>
       <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -118,7 +118,7 @@ export function NavActions() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 data-[state=open]:bg-accent"
+            className="h-6 w-6 data-[state=open]:bg-accent"
           >
             <MoreHorizontal />
           </Button>

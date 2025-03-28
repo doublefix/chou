@@ -36,7 +36,7 @@ export default function RootLayout({
               className="h-9 w-[360px] pl-10"
             />
           </div>
-          <div className="ml-auto px-3">
+          <div className="ml-auto px-3 gap-4 px-4 ">
             <NavActions />
           </div>
         </header>

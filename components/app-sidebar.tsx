@@ -20,6 +20,9 @@ import {
   Search,
   Sparkles,
   Trash2,
+  HelpCircleIcon,
+  SearchIcon,
+  SettingsIcon,
 } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -197,14 +200,24 @@ const data = {
   ],
   navSecondary: [
     {
+      title: "Settings",
+      url: "#",
+      icon: SettingsIcon,
+    },
+    {
+      title: "Get Help",
+      url: "#",
+      icon: HelpCircleIcon,
+    },
+    {
+      title: "Search",
+      url: "#",
+      icon: SearchIcon,
+    },
+    {
       title: "Calendar",
       url: "#",
       icon: Calendar,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
     },
     {
       title: "Templates",
