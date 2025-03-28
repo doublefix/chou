@@ -79,7 +79,7 @@ const data = {
     },
     {
       title: "Home",
-      url: "#",
+      url: "/home/dashboard",
       icon: Home,
       // isActive: true,
     },
