@@ -377,14 +377,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
+  // Show SidebarHeader border when scrolled
+  const [showBorder, setShowBorder] = React.useState(false);
+  const contentRef = React.useRef<HTMLDivElement>(null);
+  const handleScroll = () => {
+    if (contentRef.current) {
+      setShowBorder(contentRef.current.scrollTop > 0);
+    }
+  };
+
   return (
     <>
       <Sidebar collapsible="icon" {...props}>
-        <SidebarHeader>
+        <SidebarHeader className={showBorder ? "border-b" : ""}>
           <TeamSwitcher teams={data.teams} />
           <NavMainTop items={data.navMainTop} />
         </SidebarHeader>
-        <SidebarContent>
+        <SidebarContent
+          ref={contentRef}
+          onScroll={handleScroll}
+          className="overflow-y-auto"
+        >
           <NavMain items={data.navMain} />
           <NavProjects projects={data.projects} />
           <NavFavorites favorites={data.favorites} />
