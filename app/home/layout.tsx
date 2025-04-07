@@ -1,13 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { NavActions } from "@/components/nav-actions"
+import { NavActions } from "@/components/nav-actions";
 import { Input } from "@/components/ui/input2";
 import { Search } from "lucide-react";
 import {
@@ -25,9 +17,9 @@ export default function RootLayout({
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 bg-background">
+        <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-grid   w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="flex items-center gap-4 px-4 relative">
-            <Search className="absolute left-7 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-6 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
               autoComplete="off"
