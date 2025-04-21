@@ -31,9 +31,11 @@ export async function middleware(request: NextRequest) {
   if (isExpired && refreshToken) {
     const data = await fetchTokenDetail(refreshToken);
     if (data) {
-      // console.log(data);
+      console.log(data);
       const accessToken = data.access_token;
-      const accessTokenTTL = data.access_token_ttl;
+      // TODO: 后端返回时间不正确，是 0
+      const accessTokenTTL =
+        data.access_token_ttl > 0 ? data.access_token_ttl : 3600;
       const domain = data.domain;
       response.cookies.set("access_token", accessToken, {
         maxAge: accessTokenTTL,
