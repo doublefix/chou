@@ -36,10 +36,10 @@ export async function middleware(request: NextRequest) {
       // TODO: 后端返回时间不正确，是 0
       const accessTokenTTL =
         data.access_token_ttl > 0 ? data.access_token_ttl : 3600;
-      const domain = data.domain;
+      const path = data.path;
       response.cookies.set("access_token", accessToken, {
         maxAge: accessTokenTTL,
-        path: domain,
+        path: path,
         httpOnly: true,
         secure: true,
         sameSite: "strict",
