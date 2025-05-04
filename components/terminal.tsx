@@ -47,22 +47,25 @@ const getStatusColor = (status: TerminalStatus): string => {
 };
 
 export default function XTerminal() {
-  // Refs
   const terminalRef = useRef<HTMLDivElement>(null);
   const terminalInstance = useRef<import("@xterm/xterm").Terminal | null>(null);
   const fitAddon = useRef<import("@xterm/addon-fit").FitAddon | null>(null);
   const socket = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // State
   const [status, setStatus] = useState<TerminalStatus>("disconnected");
   const searchParams = useSearchParams();
 
-  // Connection management
   const disconnect = () => {
     if (reconnectTimer.current) {
       clearTimeout(reconnectTimer.current);
       reconnectTimer.current = null;
+    }
+
+    if (heartbeatTimer.current) {
+      clearInterval(heartbeatTimer.current);
+      heartbeatTimer.current = null;
     }
 
     if (socket.current) {
@@ -175,13 +178,18 @@ export default function XTerminal() {
     const wsUrl = `ws://localhost:8081/namespace/${namespace}/pod/${pod}/container/${container}`;
     socket.current = new WebSocket(wsUrl);
 
-    // Socket event handlers
     socket.current.addEventListener("open", () => {
       setStatus("connected");
       terminalInstance.current?.write(
         "\x1b[32m✅ Connected to container\x1b[m\r\n"
       );
       sendResize();
+
+      heartbeatTimer.current = setInterval(() => {
+        if (socket.current?.readyState === WebSocket.OPEN) {
+          socket.current.send("0"); // 简单心跳
+        }
+      }, 15000); // 每 15 秒发送一次
     });
 
     socket.current.addEventListener("message", handleSocketMessage);
@@ -194,6 +202,11 @@ export default function XTerminal() {
         );
         reconnectTimer.current = setTimeout(connect, 5000);
       }
+
+      if (heartbeatTimer.current) {
+        clearInterval(heartbeatTimer.current);
+        heartbeatTimer.current = null;
+      }
     });
 
     socket.current.addEventListener("error", () => {
@@ -204,7 +217,6 @@ export default function XTerminal() {
     });
   };
 
-  // Effects
   useEffect(() => {
     connect();
 
