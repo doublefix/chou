@@ -2,11 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Terminal } from "@xterm/xterm";
-import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 
-// UTF-8 安全的 Base64 编码
 function encodeBase64(str: string): string {
   const utf8Bytes = new TextEncoder().encode(str);
   const binary = Array.from(utf8Bytes)
@@ -15,7 +12,6 @@ function encodeBase64(str: string): string {
   return btoa(binary);
 }
 
-// UTF-8 安全的 Base64 解码
 function decodeBase64(base64: string): string {
   try {
     const binary = atob(base64);
@@ -32,8 +28,9 @@ export default function XTerminal() {
   const [status, setStatus] = useState<
     "disconnected" | "connecting" | "connected"
   >("disconnected");
-  const terminal = useRef<Terminal | null>(null);
-  const fitAddon = useRef(new FitAddon());
+
+  const terminal = useRef<any>(null);
+  const fitAddon = useRef<any>(null);
   const socket = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
 
@@ -57,15 +54,21 @@ export default function XTerminal() {
     ) {
       const dims = fitAddon.current.proposeDimensions();
       if (dims) {
-        const sizeMsg = `9${encodeBase64(
-          JSON.stringify({ data: { columns: dims.cols, rows: dims.rows } })
-        )}`;
+        const resizePayload = {
+          type: "resize",
+          data: {
+            columns: dims.cols,
+            rows: dims.rows,
+          },
+        };
+
+        const sizeMsg = `9${encodeBase64(JSON.stringify(resizePayload))}`;
         socket.current.send(sizeMsg);
       }
     }
   };
 
-  const connect = () => {
+  const connect = async () => {
     const namespace = searchParams.get("namespace");
     const pod = searchParams.get("pod");
     const container = searchParams.get("container");
@@ -78,6 +81,9 @@ export default function XTerminal() {
     disconnect();
     setStatus("connecting");
 
+    const { Terminal } = await import("@xterm/xterm");
+    const { FitAddon } = await import("@xterm/addon-fit");
+
     if (!terminal.current && terminalRef.current) {
       terminal.current = new Terminal({
         cursorBlink: true,
@@ -88,6 +94,7 @@ export default function XTerminal() {
         },
       });
 
+      fitAddon.current = new FitAddon();
       terminal.current.loadAddon(fitAddon.current);
       terminal.current.open(terminalRef.current);
       fitAddon.current.fit();
@@ -120,11 +127,11 @@ export default function XTerminal() {
         const payload = event.data.slice(1);
 
         switch (type) {
-          case "1": // stdout
-          case "2": // stderr
+          case "1":
+          case "2":
             terminal.current?.write(decodeBase64(payload));
             break;
-          case "3": // system message
+          case "3":
             terminal.current?.write(
               `\r\n\x1b[33m[System] ${decodeBase64(payload)}\x1b[m\r\n`
             );
@@ -173,11 +180,11 @@ export default function XTerminal() {
       terminal.current?.dispose();
       terminal.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   return (
     <div className="h-full w-full flex flex-col bg-black">
-      {/* Sticky Toolbar */}
       <div className="sticky top-0 z-10 flex items-center p-2 bg-gray-800 text-white">
         <span className="mr-4">
           Status:
@@ -202,7 +209,6 @@ export default function XTerminal() {
         </button>
       </div>
 
-      {/* Terminal */}
       <div ref={terminalRef} className="flex-grow overflow-hidden" />
     </div>
   );
