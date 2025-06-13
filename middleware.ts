@@ -69,7 +69,7 @@ function redirectTo(request: NextRequest, pathname: string) {
 
 async function checkTokenExpiration(token: string): Promise<boolean> {
   try {
-    const response = await fetch(`http://localhost:8080/api/v1/token/check`, {
+    const response = await fetch(`http://localhost:8080/api/v1/auth/token/check`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,

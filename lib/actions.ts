@@ -4,7 +4,7 @@ export async function authenticate(formData: FormData) {
     formObject[key] = value as string;
   });
 
-  const response = await fetch("/api/v1/token/access", {
+  const response = await fetch("/api/v1/auth/token/access", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -49,7 +49,7 @@ export const logout = async (): Promise<{
   redirect?: string;
 }> => {
   try {
-    const response = await fetch("/api/v1/logout", {
+    const response = await fetch("/api/v1/auth/logout", {
       method: "POST",
       credentials: "include",
     });

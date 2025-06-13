@@ -28,7 +28,7 @@ export function LoginForm() {
     const formData = new FormData(event.currentTarget);
 
     try {
-      const result = await mutate("/api/v1/token/access", () =>
+      const result = await mutate("/api/v1/auth/token/access", () =>
         authenticate(formData)
       );
       if (result?.redirect) {
