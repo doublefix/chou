@@ -91,7 +91,7 @@ async function checkTokenExpiration(token: string): Promise<boolean> {
 async function fetchTokenDetail(refreshToken: string): Promise<any> {
   try {
     const response = await fetch(
-      "http://localhost:8080/api/v1/token/refresh/detail",
+      "http://localhost:8080/api/v1/auth/token/refresh/detail",
       {
         method: "GET",
         headers: {
