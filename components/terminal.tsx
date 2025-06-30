@@ -4,81 +4,85 @@ import { useEffect, useRef, useState } from "react";
 import debounce from "lodash.debounce";
 import "@xterm/xterm/css/xterm.css";
 
+// 类型定义
 type TerminalStatus = "disconnected" | "connecting" | "connected";
+
+// 状态颜色函数
+const getStatusColor = (status: TerminalStatus): string => {
+  switch (status) {
+    case "connected":
+      return "text-green-400";
+    case "connecting":
+      return "text-yellow-400";
+    case "disconnected":
+      return "text-red-400";
+  }
+};
 
 export default function XTerminal() {
   const terminalRef = useRef<HTMLDivElement>(null);
-  const terminal = useRef<any>(null);
-  const fitAddon = useRef<any>(null);
+  const terminal = useRef<import("@xterm/xterm").Terminal | null>(null);
+  const fitAddon = useRef<import("@xterm/addon-fit").FitAddon | null>(null);
   const socket = useRef<WebSocket | null>(null);
-  const resizeObserver = useRef<ResizeObserver | null>(null);
-
   const [status, setStatus] = useState<TerminalStatus>("disconnected");
 
   const sendResize = () => {
     if (!fitAddon.current || !terminal.current || !socket.current) return;
 
-    let dims = fitAddon.current.proposeDimensions();
-    if (!dims || dims.cols === 0 || dims.rows === 0) {
-      // fallback 尺寸防止 undefined
-      dims = {
-        cols: terminal.current.cols,
-        rows: terminal.current.rows,
-      };
-    }
+    const dims = fitAddon.current.proposeDimensions();
+    if (!dims || dims.cols === 0 || dims.rows === 0) return;
 
-    const msg = JSON.stringify({
+    const resizeMsg = JSON.stringify({
       type: "resize",
       width: dims.cols,
       height: dims.rows,
     });
 
     if (socket.current.readyState === WebSocket.OPEN) {
-      socket.current.send(msg);
-      console.log(`[终端尺寸变化] cols=${dims.cols}, rows=${dims.rows}, 已发送 resize 消息到后端`);
-    } else {
-      console.warn("[WebSocket] 无法发送 resize，连接未就绪");
+      socket.current.send(resizeMsg);
+      console.log(`[resize] cols=${dims.cols}, rows=${dims.rows}`);
     }
   };
 
   const debouncedResize = useRef(debounce(sendResize, 200)).current;
 
   const initTerminal = async () => {
-    if (terminalRef.current && !terminal.current) {
-      const { Terminal } = await import("@xterm/xterm");
-      const { FitAddon } = await import("@xterm/addon-fit");
+    if (!terminalRef.current || terminal.current) return;
 
-      terminal.current = new Terminal({
-        cursorBlink: true,
-        fontSize: 14,
-        theme: {
-          background: "#1e1e1e",
-          foreground: "#f0f0f0",
-        },
-      });
+    const { Terminal } = await import("@xterm/xterm");
+    const { FitAddon } = await import("@xterm/addon-fit");
 
-      fitAddon.current = new FitAddon();
-      terminal.current.loadAddon(fitAddon.current);
-      terminal.current.open(terminalRef.current);
+    terminal.current = new Terminal({
+      cursorBlink: true,
+      fontSize: 14,
+      theme: {
+        background: "#000000",
+        foreground: "#f0f0f0",
+      },
+    });
 
-      // ✅ 初次挂载时容器必须可见
-      if (
-        terminalRef.current.offsetWidth > 0 &&
-        terminalRef.current.offsetHeight > 0
-      ) {
-        fitAddon.current.fit();
+    fitAddon.current = new FitAddon();
+    terminal.current.loadAddon(fitAddon.current);
+    terminal.current.open(terminalRef.current);
+
+    // 初次挂载时尝试 fit，直到容器尺寸可用
+    const tryFit = () => {
+      const width = terminalRef.current?.offsetWidth || 0;
+      const height = terminalRef.current?.offsetHeight || 0;
+      if (width > 0 && height > 0) {
+        fitAddon.current!.fit();
+        sendResize();
+      } else {
+        setTimeout(tryFit, 100);
       }
+    };
+    tryFit();
 
-      terminal.current.onData((data: string) => {
-        if (socket.current?.readyState === WebSocket.OPEN) {
-          const msg = JSON.stringify({
-            type: "stdin",
-            data,
-          });
-          socket.current.send(msg);
-        }
-      });
-    }
+    terminal.current.onData((data) => {
+      if (socket.current?.readyState === WebSocket.OPEN) {
+        socket.current.send(JSON.stringify({ type: "stdin", data }));
+      }
+    });
   };
 
   const connect = async () => {
@@ -86,90 +90,71 @@ export default function XTerminal() {
 
     if (socket.current) {
       socket.current.close();
+      socket.current = null;
     }
 
     await initTerminal();
-
-    terminal.current?.writeln("\x1b[33m正在连接终端服务器...\x1b[0m");
+    terminal.current?.writeln("\r\nConnecting...\r\n");
 
     socket.current = new WebSocket("ws://localhost:8080/api/v1/ws");
 
     socket.current.onopen = () => {
       setStatus("connected");
-      terminal.current?.writeln("\x1b[32m✓ 已连接到终端\x1b[0m");
-
-      // ✅ 延迟执行 fit + resize，防止第一次为 0 尺寸
+      terminal.current?.writeln("\x1b[32m✓ Connected\x1b[0m");
       setTimeout(() => {
-        if (fitAddon.current && terminalRef.current) {
-          fitAddon.current.fit();
-          sendResize();
-        }
+        fitAddon.current?.fit();
+        sendResize();
       }, 50);
     };
 
-    socket.current.onmessage = (event) => {
-      terminal.current?.write(event.data);
+    socket.current.onmessage = (e) => {
+      terminal.current?.write(e.data);
     };
 
     socket.current.onclose = () => {
       setStatus("disconnected");
-      terminal.current?.writeln("\x1b[31m✗ 连接已断开\x1b[0m");
+      terminal.current?.writeln("\x1b[31m✗ Connection closed\x1b[0m");
     };
 
     socket.current.onerror = () => {
       setStatus("disconnected");
-      terminal.current?.writeln("\x1b[31m⚠️ 连接发生错误\x1b[0m");
+      terminal.current?.writeln("\x1b[31m⚠️ Connection error\x1b[0m");
     };
   };
 
   useEffect(() => {
     connect();
 
-    if (terminalRef.current) {
-      resizeObserver.current = new ResizeObserver(() => {
-        if (fitAddon.current && terminal.current) {
-          try {
-            fitAddon.current.fit();
-            debouncedResize();
-          } catch (e) {
-            console.error("ResizeObserver fit error:", e);
-          }
+    const resizeHandler = () => {
+      if (fitAddon.current) {
+        try {
+          fitAddon.current.fit();
+          debouncedResize();
+        } catch (err) {
+          console.error("fit() failed:", err);
         }
-      });
-      resizeObserver.current.observe(terminalRef.current);
-    }
+      }
+    };
+
+    window.addEventListener("resize", resizeHandler);
 
     return () => {
-      resizeObserver.current?.disconnect();
-      resizeObserver.current = null;
-
+      window.removeEventListener("resize", resizeHandler);
       socket.current?.close();
       terminal.current?.dispose();
-
+      terminal.current = null;
       debouncedResize.cancel();
     };
   }, []);
 
-  const statusColor = {
-    connected: "text-green-400",
-    connecting: "text-yellow-400",
-    disconnected: "text-red-400",
-  };
-
-  const statusText = {
-    connected: "已连接",
-    connecting: "连接中...",
-    disconnected: "已断开",
-  };
-
   return (
-    <div className="h-full w-full flex flex-col bg-[#1e1e1e]">
-      {/* 顶部状态栏 */}
+    <div className="h-full w-full flex flex-col bg-black">
+      {/* Top status bar (English, styled like v1) */}
       <div className="sticky top-0 z-10 flex items-center p-2 bg-gray-800 text-white">
         <span className="mr-4">
-          连接状态:
-          <span className={`ml-2 ${statusColor[status]}`}>
-            {statusText[status]}
+          Status:
+          <span className={`ml-2 ${getStatusColor(status)}`}>
+            {status.toUpperCase()}
           </span>
         </span>
         <button
@@ -177,12 +162,15 @@ export default function XTerminal() {
           disabled={status === "connecting"}
           className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-700 disabled:bg-gray-600"
         >
-          {status === "connecting" ? "正在连接..." : "重新连接"}
+          {status === "connecting" ? "Connecting..." : "Reconnect"}
         </button>
       </div>
 
-      {/* 终端容器 */}
-      <div ref={terminalRef} className="flex-grow overflow-hidden min-h-0" />
+      {/* Terminal container */}
+      <div
+        ref={terminalRef}
+        className="flex-grow overflow-hidden" // if needed, add "min-h-0" for layout stability
+      />
     </div>
   );
 }
