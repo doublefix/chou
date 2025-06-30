@@ -46,11 +46,13 @@ export default function XTerminal() {
   const sendResize = () => {
     if (!fitAddon.current || !terminal.current || !socket.current) return;
 
-    const { cols, rows } = terminal.current;
+    const dims = fitAddon.current.proposeDimensions();
+    if (!dims) return;
+
     const msg = JSON.stringify({
       type: "resize",
-      width: cols,
-      height: rows,
+      width: dims.cols,
+      height: dims.rows,
     });
 
     if (socket.current.readyState === WebSocket.OPEN) {
@@ -128,10 +130,11 @@ export default function XTerminal() {
 
   return (
     <div className="h-full w-full flex flex-col bg-[#1e1e1e]">
-      <div className="flex items-center p-2 bg-gray-800 text-white">
+      {/* 顶部状态栏 */}
+      <div className="sticky top-0 z-10 flex items-center p-2 bg-gray-800 text-white">
         <span className="mr-4">
-          连接状态:{" "}
-          <span className={statusColor[status]}>
+          连接状态:
+          <span className={`ml-2 ${statusColor[status]}`}>
             {statusText[status]}
           </span>
         </span>
@@ -143,7 +146,9 @@ export default function XTerminal() {
           {status === "connecting" ? "正在连接..." : "重新连接"}
         </button>
       </div>
-      <div ref={terminalRef} className="flex-grow p-2" />
+
+      {/* 终端容器 */}
+      <div ref={terminalRef} className="flex-grow overflow-hidden" />
     </div>
   );
 }
