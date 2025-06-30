@@ -1,253 +1,138 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import "@xterm/xterm/css/xterm.css";
 
-// Types
 type TerminalStatus = "disconnected" | "connecting" | "connected";
-type MessageType = "0" | "1" | "2" | "3" | "9";
-
-interface ResizePayload {
-  type: "resize";
-  data: {
-    columns: number;
-    rows: number;
-  };
-}
-
-// Utility functions
-const encodeBase64 = (str: string): string => {
-  const utf8Bytes = new TextEncoder().encode(str);
-  const binary = Array.from(utf8Bytes)
-    .map((b) => String.fromCharCode(b))
-    .join("");
-  return btoa(binary);
-};
-
-const decodeBase64 = (base64: string): string => {
-  try {
-    const binary = atob(base64);
-    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-    return new TextDecoder().decode(bytes);
-  } catch {
-    return "[Base64 Decode Error]\r\n";
-  }
-};
-
-const getStatusColor = (status: TerminalStatus): string => {
-  switch (status) {
-    case "connected":
-      return "text-green-400";
-    case "connecting":
-      return "text-yellow-400";
-    case "disconnected":
-      return "text-red-400";
-  }
-};
 
 export default function XTerminal() {
   const terminalRef = useRef<HTMLDivElement>(null);
-  const terminalInstance = useRef<import("@xterm/xterm").Terminal | null>(null);
-  const fitAddon = useRef<import("@xterm/addon-fit").FitAddon | null>(null);
+  const terminal = useRef<any>(null);
+  const fitAddon = useRef<any>(null);
   const socket = useRef<WebSocket | null>(null);
-  const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
-  const heartbeatTimer = useRef<NodeJS.Timeout | null>(null);
-
   const [status, setStatus] = useState<TerminalStatus>("disconnected");
-  const searchParams = useSearchParams();
 
-  const disconnect = () => {
-    if (reconnectTimer.current) {
-      clearTimeout(reconnectTimer.current);
-      reconnectTimer.current = null;
-    }
+  const initTerminal = async () => {
+    if (terminalRef.current && !terminal.current) {
+      const { Terminal } = await import("@xterm/xterm");
+      const { FitAddon } = await import("@xterm/addon-fit");
 
-    if (heartbeatTimer.current) {
-      clearInterval(heartbeatTimer.current);
-      heartbeatTimer.current = null;
-    }
-
-    if (socket.current) {
-      socket.current.close();
-      socket.current = null;
-    }
-
-    setStatus("disconnected");
-  };
-
-  const sendResize = () => {
-    if (
-      !fitAddon.current ||
-      !terminalInstance.current ||
-      socket.current?.readyState !== WebSocket.OPEN
-    ) {
-      return;
-    }
-
-    const dims = fitAddon.current.proposeDimensions();
-    if (!dims) return;
-
-    const resizePayload: ResizePayload = {
-      type: "resize",
-      data: {
-        columns: dims.cols,
-        rows: dims.rows,
-      },
-    };
-
-    const sizeMsg = `9${encodeBase64(JSON.stringify(resizePayload))}`;
-    socket.current.send(sizeMsg);
-  };
-
-  const initializeTerminal = async () => {
-    const { Terminal } = await import("@xterm/xterm");
-    const { FitAddon } = await import("@xterm/addon-fit");
-
-    if (!terminalInstance.current && terminalRef.current) {
-      terminalInstance.current = new Terminal({
+      terminal.current = new Terminal({
         cursorBlink: true,
         fontSize: 14,
         theme: {
-          background: "#000000",
+          background: "#1e1e1e",
           foreground: "#f0f0f0",
         },
       });
 
       fitAddon.current = new FitAddon();
-      terminalInstance.current.loadAddon(fitAddon.current);
-      terminalInstance.current.open(terminalRef.current);
+      terminal.current.loadAddon(fitAddon.current);
+      terminal.current.open(terminalRef.current);
       fitAddon.current.fit();
 
-      terminalInstance.current.onData((data: string) => {
+      terminal.current.onData((data: string) => {
         if (socket.current?.readyState === WebSocket.OPEN) {
-          socket.current.send(`0${encodeBase64(data)}`);
+          const msg = JSON.stringify({
+            type: "stdin",
+            data,
+          });
+          socket.current.send(msg);
         }
       });
     }
   };
 
-  const handleSocketMessage = (event: MessageEvent) => {
-    if (!terminalInstance.current) return;
+  const sendResize = () => {
+    if (!fitAddon.current || !terminal.current || !socket.current) return;
 
-    if (event.data instanceof Blob) {
-      event.data.arrayBuffer().then((buffer) => {
-        terminalInstance.current?.write(new TextDecoder().decode(buffer));
-      });
-      return;
+    const { cols, rows } = terminal.current;
+    const msg = JSON.stringify({
+      type: "resize",
+      width: cols,
+      height: rows,
+    });
+
+    if (socket.current.readyState === WebSocket.OPEN) {
+      socket.current.send(msg);
     }
+  };
 
-    if (typeof event.data !== "string") return;
-
-    const type = event.data.charAt(0) as MessageType;
-    const payload = event.data.slice(1);
-
-    switch (type) {
-      case "1":
-      case "2":
-        terminalInstance.current.write(decodeBase64(payload));
-        break;
-      case "3":
-        terminalInstance.current.write(
-          `\r\n\x1b[33m[System] ${decodeBase64(payload)}\x1b[m\r\n`
-        );
-        break;
-      default:
-        terminalInstance.current.write(
-          `\r\n\x1b[31m[Unknown Message Type]\x1b[m\r\n`
-        );
+  const handleResize = () => {
+    if (fitAddon.current && terminal.current) {
+      try {
+        fitAddon.current.fit();
+        sendResize();
+      } catch (e) {
+        console.error("调整大小出错:", e);
+      }
     }
   };
 
   const connect = async () => {
-    const namespace = searchParams.get("namespace");
-    const pod = searchParams.get("pod");
-    const container = searchParams.get("container");
-
-    if (!namespace || !pod || !container) {
-      console.error("Missing query parameters");
-      return;
-    }
-
-    disconnect();
     setStatus("connecting");
 
-    await initializeTerminal();
-    terminalInstance.current?.write("\r\nConnecting to container...\r\n");
+    if (socket.current) {
+      socket.current.close();
+    }
 
-    const wsUrl = `ws://localhost:8081/namespace/${namespace}/pod/${pod}/container/${container}`;
-    socket.current = new WebSocket(wsUrl);
+    await initTerminal();
 
-    socket.current.addEventListener("open", () => {
+    terminal.current?.writeln("\x1b[33m正在连接终端服务器...\x1b[0m");
+
+    socket.current = new WebSocket("ws://localhost:8080/api/v1/ws");
+
+    socket.current.onopen = () => {
       setStatus("connected");
-      terminalInstance.current?.write(
-        "\x1b[32m✅ Connected to container\x1b[m\r\n"
-      );
+      terminal.current?.writeln("\x1b[32m✓ 已连接到终端\x1b[0m");
       sendResize();
+    };
 
-      heartbeatTimer.current = setInterval(() => {
-        if (socket.current?.readyState === WebSocket.OPEN) {
-          socket.current.send("0"); // 简单心跳
-        }
-      }, 15000); // 每 15 秒发送一次
-    });
+    socket.current.onmessage = (event) => {
+      terminal.current?.write(event.data);
+    };
 
-    socket.current.addEventListener("message", handleSocketMessage);
-
-    socket.current.addEventListener("close", () => {
-      if (status !== "disconnected") {
-        setStatus("disconnected");
-        terminalInstance.current?.write(
-          "\r\n\x1b[31m❌ Connection closed\x1b[m\r\n"
-        );
-        reconnectTimer.current = setTimeout(connect, 5000);
-      }
-
-      if (heartbeatTimer.current) {
-        clearInterval(heartbeatTimer.current);
-        heartbeatTimer.current = null;
-      }
-    });
-
-    socket.current.addEventListener("error", () => {
+    socket.current.onclose = () => {
       setStatus("disconnected");
-      terminalInstance.current?.write(
-        "\r\n\x1b[31m⚠️ Connection error\x1b[m\r\n"
-      );
-    });
+      terminal.current?.writeln("\x1b[31m✗ 连接已断开\x1b[0m");
+    };
+
+    socket.current.onerror = () => {
+      setStatus("disconnected");
+      terminal.current?.writeln("\x1b[31m⚠️ 连接发生错误\x1b[0m");
+    };
   };
 
   useEffect(() => {
     connect();
 
-    const handleResize = () => {
-      if (fitAddon.current && terminalInstance.current) {
-        try {
-          fitAddon.current.fit();
-          sendResize();
-        } catch (e) {
-          console.error("Resize error:", e);
-        }
-      }
-    };
-
     window.addEventListener("resize", handleResize);
-
     return () => {
       window.removeEventListener("resize", handleResize);
-      disconnect();
-      terminalInstance.current?.dispose();
-      terminalInstance.current = null;
+      socket.current?.close();
+      terminal.current?.dispose();
     };
-  }, [searchParams]);
+  }, []);
+
+  const statusColor = {
+    connected: "text-green-400",
+    connecting: "text-yellow-400",
+    disconnected: "text-red-400",
+  };
+
+  const statusText = {
+    connected: "已连接",
+    connecting: "连接中...",
+    disconnected: "已断开",
+  };
 
   return (
-    <div className="h-full w-full flex flex-col bg-black">
-      <div className="sticky top-0 z-10 flex items-center p-2 bg-gray-800 text-white">
+    <div className="h-full w-full flex flex-col bg-[#1e1e1e]">
+      <div className="flex items-center p-2 bg-gray-800 text-white">
         <span className="mr-4">
-          Status:
-          <span className={`ml-2 ${getStatusColor(status)}`}>
-            {status.toUpperCase()}
+          连接状态:{" "}
+          <span className={statusColor[status]}>
+            {statusText[status]}
           </span>
         </span>
         <button
@@ -255,11 +140,10 @@ export default function XTerminal() {
           disabled={status === "connecting"}
           className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-700 disabled:bg-gray-600"
         >
-          {status === "connecting" ? "Connecting..." : "Reconnect"}
+          {status === "connecting" ? "正在连接..." : "重新连接"}
         </button>
       </div>
-
-      <div ref={terminalRef} className="flex-grow overflow-hidden" />
+      <div ref={terminalRef} className="flex-grow p-2" />
     </div>
   );
 }
