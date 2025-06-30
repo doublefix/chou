@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import debounce from "lodash.debounce"; // ✅ 新增
+import debounce from "lodash.debounce";
 import "@xterm/xterm/css/xterm.css";
 
 type TerminalStatus = "disconnected" | "connecting" | "connected";
@@ -18,8 +18,14 @@ export default function XTerminal() {
   const sendResize = () => {
     if (!fitAddon.current || !terminal.current || !socket.current) return;
 
-    const dims = fitAddon.current.proposeDimensions();
-    if (!dims) return;
+    let dims = fitAddon.current.proposeDimensions();
+    if (!dims || dims.cols === 0 || dims.rows === 0) {
+      // fallback 尺寸防止 undefined
+      dims = {
+        cols: terminal.current.cols,
+        rows: terminal.current.rows,
+      };
+    }
 
     const msg = JSON.stringify({
       type: "resize",
@@ -35,7 +41,6 @@ export default function XTerminal() {
     }
   };
 
-  // ✅ 创建防抖版的 sendResize（200ms 延迟）
   const debouncedResize = useRef(debounce(sendResize, 200)).current;
 
   const initTerminal = async () => {
@@ -55,7 +60,14 @@ export default function XTerminal() {
       fitAddon.current = new FitAddon();
       terminal.current.loadAddon(fitAddon.current);
       terminal.current.open(terminalRef.current);
-      fitAddon.current.fit();
+
+      // ✅ 初次挂载时容器必须可见
+      if (
+        terminalRef.current.offsetWidth > 0 &&
+        terminalRef.current.offsetHeight > 0
+      ) {
+        fitAddon.current.fit();
+      }
 
       terminal.current.onData((data: string) => {
         if (socket.current?.readyState === WebSocket.OPEN) {
@@ -85,7 +97,14 @@ export default function XTerminal() {
     socket.current.onopen = () => {
       setStatus("connected");
       terminal.current?.writeln("\x1b[32m✓ 已连接到终端\x1b[0m");
-      sendResize(); // ✅ 初次连接立即发送一次，不防抖
+
+      // ✅ 延迟执行 fit + resize，防止第一次为 0 尺寸
+      setTimeout(() => {
+        if (fitAddon.current && terminalRef.current) {
+          fitAddon.current.fit();
+          sendResize();
+        }
+      }, 50);
     };
 
     socket.current.onmessage = (event) => {
@@ -111,7 +130,7 @@ export default function XTerminal() {
         if (fitAddon.current && terminal.current) {
           try {
             fitAddon.current.fit();
-            debouncedResize(); // ✅ 用防抖函数代替原始的 sendResize
+            debouncedResize();
           } catch (e) {
             console.error("ResizeObserver fit error:", e);
           }
@@ -123,10 +142,10 @@ export default function XTerminal() {
     return () => {
       resizeObserver.current?.disconnect();
       resizeObserver.current = null;
+
       socket.current?.close();
       terminal.current?.dispose();
 
-      // ✅ 清理防抖定时器
       debouncedResize.cancel();
     };
   }, []);
@@ -163,7 +182,7 @@ export default function XTerminal() {
       </div>
 
       {/* 终端容器 */}
-      <div ref={terminalRef} className="flex-grow overflow-hidden" />
+      <div ref={terminalRef} className="flex-grow overflow-hidden min-h-0" />
     </div>
   );
 }
