@@ -170,7 +170,7 @@ export default function XTerminal() {
       <div className="flex-grow overflow-hidden px-1 py-1">
         <div
           ref={terminalRef}
-          className="flex-grow overflow-hidden" // if needed, add "min-h-0" for layout stability
+          className="w-full h-full rounded-lg overflow-hidden bg-black"
         />
       </div>
     </div>
