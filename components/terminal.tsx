@@ -167,10 +167,12 @@ export default function XTerminal() {
       </div>
 
       {/* Terminal container */}
-      <div
-        ref={terminalRef}
-        className="flex-grow overflow-hidden" // if needed, add "min-h-0" for layout stability
-      />
+      <div className="flex-grow overflow-hidden px-1 py-1">
+        <div
+          ref={terminalRef}
+          className="flex-grow overflow-hidden" // if needed, add "min-h-0" for layout stability
+        />
+      </div>
     </div>
   );
 }
