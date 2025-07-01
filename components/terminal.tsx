@@ -96,7 +96,16 @@ export default function XTerminal() {
     await initTerminal();
     terminal.current?.writeln("\r\nConnecting...\r\n");
 
-    socket.current = new WebSocket("ws://localhost:8080/api/v1/ws");
+    const namespace = "kube-system";
+    const podName = "calico-node-rcjsm";
+    const container = "calico-node";
+    const wsUrl = `ws://localhost:8080/api/v1/ws?namespace=${encodeURIComponent(
+      namespace
+    )}&pod=${encodeURIComponent(podName)}&container=${encodeURIComponent(
+      container
+    )}`;
+
+    socket.current = new WebSocket(wsUrl);
 
     socket.current.onopen = () => {
       setStatus("connected");
