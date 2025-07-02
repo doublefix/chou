@@ -36,7 +36,16 @@ export default function LogViewer() {
       
       terminal.current.write("\x1b[33mConnecting to log stream...\x1b[0m");
 
-      socket.current = new WebSocket("ws://localhost:8080/api/v1/ws/log");
+
+    const namespace = "kube-system";
+    const podName = "calico-node-rcjsm";
+    const container = "calico-node";
+    const wsUrl = `ws://localhost:8080/api/v1/ws/log?namespace=${encodeURIComponent(
+      namespace
+    )}&pod=${encodeURIComponent(podName)}&container=${encodeURIComponent(
+      container
+    )}`;
+      socket.current = new WebSocket(wsUrl);
 
       socket.current.onopen = () => {
         terminal.current?.writeln("\x1b[32m✓ Log stream connected\x1b[0m");
