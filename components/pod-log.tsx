@@ -32,8 +32,9 @@ export default function LogViewer() {
       terminal.current.loadAddon(fitAddon.current);
       terminal.current.open(terminalRef.current);
       fitAddon.current.fit();
-
-      terminal.current.writeln("\x1b[33mConnecting to log stream...\x1b[0m");
+      terminal.current.write("\x1b[?25l"); // ANSI: 隐藏光标
+      
+      terminal.current.write("\x1b[33mConnecting to log stream...\x1b[0m");
 
       socket.current = new WebSocket("ws://localhost:8080/api/v1/ws/log");
 
@@ -75,11 +76,11 @@ export default function LogViewer() {
   }, []);
 
   return (
-    <div className="h-full w-full bg-black">
-      <div
-        ref={terminalRef}
-        className="w-full h-full rounded overflow-hidden"
-      />
+    <div className="flex-grow overflow-hidden pl-2">
+        <div
+            ref={terminalRef}
+            className="w-full h-full rounded-lg overflow-hidden bg-black"
+        />
     </div>
   );
 }
