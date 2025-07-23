@@ -27,10 +27,8 @@ export function LoginForm({ loginChallenge }: { loginChallenge?: string }) {
 
     const formData = new FormData(event.currentTarget);
 
-    // ✅ 附加 login_challenge 到表单中
     if (loginChallenge) {
       formData.append("login_challenge", loginChallenge);
-      console.log(loginChallenge)
     }
 
     try {
