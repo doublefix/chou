@@ -92,3 +92,13 @@ server {
 ## 项目部署
 http+https+ci
 https://stackoverflow.com/questions/64386737/how-to-deploy-nextjs-with-nginx
+
+
+
+## 本地调试
+```bash
+telepresence list
+telepresence intercept frontend-oauth-test-deployment --port 3000:3000
+telepresence leave frontend-oauth-test-deployment
+
+```

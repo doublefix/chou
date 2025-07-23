@@ -1,9 +1,10 @@
 "use client";
 
 import { mutate } from "swr";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import Link from "next/link";
+import { authenticate } from "@/lib/actions";
 import {
   Card,
   CardContent,
@@ -13,10 +14,9 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { authenticate } from "@/lib/actions";
+import { Button } from "@/components/ui/button";
 
-export function LoginForm() {
+export function LoginForm({ loginChallenge }: { loginChallenge?: string }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pending, setPending] = useState<boolean>(false);
   const router = useRouter();
@@ -26,6 +26,12 @@ export function LoginForm() {
     setPending(true);
 
     const formData = new FormData(event.currentTarget);
+
+    // ✅ 附加 login_challenge 到表单中
+    if (loginChallenge) {
+      formData.append("login_challenge", loginChallenge);
+      console.log(loginChallenge)
+    }
 
     try {
       const result = await mutate("/api/v1/auth/token/access", () =>
@@ -62,7 +68,7 @@ export function LoginForm() {
               <Input
                 id="identifier"
                 name="identifier"
-                type="identifier"
+                type="text"
                 placeholder="test@example.com"
                 required
               />
