@@ -1,23 +1,65 @@
-export async function authenticate(formData: FormData) {
+// export async function authenticate(formData: FormData) {
+//   const formObject: { [key: string]: string } = {};
+//   formData.forEach((value, key) => {
+//     formObject[key] = value as string;
+//   });
+
+//   const response = await fetch("/api/v1/auth/token/access", {
+//     method: "POST",
+//     headers: { "Content-Type": "application/json" },
+//     body: JSON.stringify({
+//       identifier: formObject.identifier,
+//       password: formObject.password,
+//     }),
+//   });
+
+//   if (!response.ok) {
+//     throw new Error("登录失败，请检查您的凭证。");
+//   }
+
+//   return await response.json();
+// }
+
+
+export async function authenticate(formData: FormData, loginChallenge?: string) {
   const formObject: { [key: string]: string } = {};
   formData.forEach((value, key) => {
     formObject[key] = value as string;
   });
 
-  const response = await fetch("/api/v1/auth/token/access", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      identifier: formObject.identifier,
-      password: formObject.password,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error("登录失败，请检查您的凭证。");
+  // 1. 获取 flow_id
+  const flowRes = await fetch("http://10.187.6.190/api/v1/flow");
+  if (!flowRes.ok) {
+    throw new Error("无法获取登录流程，请稍后重试。");
   }
 
-  return await response.json();
+  const flowData = await flowRes.json();
+  const flowId = flowData.flow_id;
+
+  if (!flowId) {
+    throw new Error("flow_id 获取失败");
+  }
+
+  // 2. 登录请求
+  const payload = {
+    flow_id: flowId,
+    identifier: formObject.identifier,
+    password: formObject.password,
+    login_challenge: loginChallenge ?? "",
+  };
+
+  const loginRes = await fetch("http://10.187.6.190/api/v1/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const loginResult = await loginRes.json();
+  if (loginRes.status !== 200) {
+    throw new Error(loginResult.error || "登录失败，请检查用户名或密码。");
+  }
+
+  return loginResult;
 }
 
 export async function join(formData: FormData) {
