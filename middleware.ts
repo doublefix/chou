@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 export const config = {
   matcher: [
+    // 匹配所有除 static/api 等路径以外的请求
     "/((?!api|_next/static|favicon.ico|.*\\.(?:css|js|map|jpg|jpeg|png|gif|svg|webp|woff|woff2|eot|ttf|otf)).*)",
   ],
 };
@@ -14,8 +15,23 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
 
-  let isExpired = true;
+  const publicPaths = [
+    "/login",
+    "/join",
+    "/oauth2/auth",
+    "/consent",
+    "/auth/callback",
+  ];
 
+  const isPublic = publicPaths.some((path) => pathname.startsWith(path));
+
+  // 👉 公共路径放行（即使未登录也能访问）
+  if (isPublic) {
+    return response;
+  }
+
+  // ✅ 判断 access_token 是否过期
+  let isExpired = true;
   if (accessToken) {
     try {
       isExpired = checkJwtTokenExpired(accessToken);
@@ -24,6 +40,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ✅ 如果 access_token 过期，尝试用 refresh_token 刷新
   if (isExpired && refreshToken) {
     const data = await fetchTokenDetail(refreshToken);
     if (data) {
@@ -45,11 +62,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // 👉 ① 未登录，重定向到 OAuth 授权
-  if (isExpired && pathname !== "/login" && pathname !== "/join") {
+  if (isExpired) {
     return redirectToOAuth(request);
   }
 
-  // 👉 ② 已登录但访问登录页，跳转到主页
+  // 👉 ② 已登录但访问 login 或 join，重定向到 /home
   if (!isExpired && (pathname === "/login" || pathname === "/join")) {
     return redirectTo(request, "/home");
   }
@@ -57,13 +74,14 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
+// ✅ 内部页面重定向
 function redirectTo(request: NextRequest, pathname: string) {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
   return NextResponse.redirect(url);
 }
 
-// ✅ OAuth 重定向逻辑
+// ✅ OAuth 登录重定向逻辑
 function redirectToOAuth(request: NextRequest): NextResponse {
   const state = crypto.randomUUID();
   const oauthURL = new URL("http://10.187.6.190/oauth2/auth");
@@ -72,12 +90,14 @@ function redirectToOAuth(request: NextRequest): NextResponse {
   oauthURL.searchParams.set("response_type", "code");
   oauthURL.searchParams.set("scope", "openid");
   oauthURL.searchParams.set("state", state);
+
+  // ⚠️ redirect_uri 建议配置为固定值
   oauthURL.searchParams.set("redirect_uri", "http://10.187.6.190/auth");
 
   return NextResponse.redirect(oauthURL.toString());
 }
 
-// ✅ JWT 本地解析是否过期
+// ✅ 检查 access_token 是否过期
 function checkJwtTokenExpired(token: string): boolean {
   const [, payloadBase64] = token.split(".");
   if (!payloadBase64) throw new Error("Invalid JWT format");
@@ -91,7 +111,7 @@ function checkJwtTokenExpired(token: string): boolean {
   return payload.exp < now;
 }
 
-// 🔄 用 refresh_token 刷新 access_token
+// 🔄 使用 refresh_token 刷新 access_token
 async function fetchTokenDetail(refreshToken: string): Promise<any> {
   try {
     const response = await fetch(
@@ -106,8 +126,7 @@ async function fetchTokenDetail(refreshToken: string): Promise<any> {
     );
 
     if (response.ok) {
-      const data = await response.json();
-      return data;
+      return await response.json();
     } else {
       console.error("Failed to fetch token detail:", response.status);
       return null;
