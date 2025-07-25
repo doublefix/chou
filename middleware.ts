@@ -9,13 +9,15 @@ export const config = {
 };
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  const url = request.nextUrl;
+  const pathname = url.pathname;
+  const query = url.searchParams;
   const response = NextResponse.next();
 
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
-  const url = request.nextUrl;
-  const query = url.searchParams;
+
+  const isLoginPath = pathname === "/login";
 
   const publicPaths = [
     "/join",
@@ -27,7 +29,24 @@ export async function middleware(request: NextRequest) {
 
   const isPublic =
     publicPaths.some((path) => pathname.startsWith(path)) ||
-    (pathname === "/login" && query.has("login_challenge")); // 允许带 login_challenge 的 /login 被放行
+    (isLoginPath && query.has("login_challenge"));
+
+  // ✅ 日志：打印请求路径及是否为公开路径
+  console.log("🔍 Incoming request:", pathname);
+  console.log("🔓 Is public path:", isPublic);
+  console.log("🍪 Has access_token:", !!accessToken);
+  console.log("🍪 Has refresh_token:", !!refreshToken);
+
+  // ❗️如果访问 /login 但没带 login_challenge，直接重定向 OAuth
+  if (isLoginPath && !query.has("login_challenge")) {
+    console.log("⚠️ /login without login_challenge, redirecting to OAuth...");
+    return redirectToOAuth(request);
+  }
+
+  // if (isLoginPath && query.has("login_challenge")) {
+  //   console.log("⚠️ /login without login_challenge, redirecting to OAuth...");
+  //   return redirectToOAuth(request);
+  // }
 
   if (isPublic) {
     return response;
@@ -38,13 +57,17 @@ export async function middleware(request: NextRequest) {
   if (accessToken) {
     try {
       isExpired = checkJwtTokenExpired(accessToken);
+      console.log("🕒 Token expired?", isExpired);
     } catch (err) {
-      console.error("Failed to decode token:", err);
+      console.error("❌ Failed to decode token:", err);
     }
+  } else {
+    console.log("⚠️ No access_token found, treating as expired.");
   }
 
-  // ✅ 如果 access_token 过期，尝试用 refresh_token 刷新
+  // ✅ 尝试刷新 token
   if (isExpired && refreshToken) {
+    console.log("🔄 Attempting to refresh access_token...");
     const data = await fetchTokenDetail(refreshToken);
     if (data) {
       const newAccessToken = data.access_token;
@@ -61,16 +84,21 @@ export async function middleware(request: NextRequest) {
       });
 
       isExpired = false;
+      console.log("✅ Token refreshed successfully.");
+    } else {
+      console.warn("⚠️ Refresh failed.");
     }
   }
 
   // 👉 ① 未登录，重定向到 OAuth 授权
   if (isExpired) {
+    console.log("🔐 User is not logged in, redirecting to OAuth...");
     return redirectToOAuth(request);
   }
 
   // 👉 ② 已登录但访问 login 或 join，重定向到 /home
   if (!isExpired && (pathname === "/login" || pathname === "/join")) {
+    console.log("✅ Already logged in, redirecting from", pathname, "to /home");
     return redirectTo(request, "/home");
   }
 
