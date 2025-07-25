@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -12,9 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 
 export function ConsentForm({
+  consent_challenge,
   clientName = "Example App",
   requestedScopes = ["openid", "profile", "email"],
 }: {
+  consent_challenge: string;
   clientName?: string;
   requestedScopes?: string[];
 }) {
@@ -26,9 +27,24 @@ export function ConsentForm({
     setErrorMessage(null);
 
     try {
-      // 这里将来调用你自己的 API 接受授权
-      console.log("[CONSENT] Accepted");
-      // router.push("/success")
+      const res = await fetch(
+        `http://10.187.6.190/api/v1/consent?consent_challenge=${consent_challenge}`,
+        {
+          method: "GET",
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(`请求失败，状态码：${res.status}`);
+      }
+
+      const data = await res.json();
+      if (!data.redirect_to) {
+        throw new Error("接口响应缺少 redirect_to");
+      }
+
+      // ✅ 跳转
+      window.location.href = data.redirect_to;
     } catch (err: any) {
       console.error("[CONSENT ERROR]", err);
       setErrorMessage(err.message || "授权失败，请联系管理员。");
@@ -38,19 +54,8 @@ export function ConsentForm({
   }
 
   async function handleReject() {
-    setPending(true);
-    setErrorMessage(null);
-
-    try {
-      // 将来调用拒绝授权的接口
-      console.log("[CONSENT] Rejected");
-      // router.push("/error")
-    } catch (err: any) {
-      console.error("[REJECT ERROR]", err);
-      setErrorMessage(err.message || "拒绝失败，请联系管理员。");
-    } finally {
-      setPending(false);
-    }
+    // 如果也有拒绝接口，请参照 handleAccept 逻辑
+    console.log("[CONSENT] 用户拒绝授权，未实现跳转");
   }
 
   return (
@@ -58,7 +63,8 @@ export function ConsentForm({
       <CardHeader>
         <CardTitle className="text-2xl">请求授权</CardTitle>
         <CardDescription>
-          <span className="font-medium">{clientName}</span> 想要访问你的账户信息。
+          <span className="font-medium">{clientName}</span>{" "}
+          想要访问你的账户信息。
         </CardDescription>
       </CardHeader>
       <CardContent>

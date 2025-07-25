@@ -21,6 +21,7 @@ export async function middleware(request: NextRequest) {
     "/oauth2/auth",
     "/consent",
     "/auth/callback",
+    "/auth",
   ];
 
   const isPublic = publicPaths.some((path) => pathname.startsWith(path));

@@ -30,7 +30,7 @@ async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
   try {
     const result = await authenticate(formData, loginChallenge);
     console.log("[LOGIN RESPONSE]", result);
-    router.push(result.redirect || "/");
+    router.push(result.redirect_to || "/"); // 修改这里
   } catch (err: any) {
     console.error("[LOGIN ERROR]", err);
     setErrorMessage(err.message || "登录失败，请联系管理员。");
