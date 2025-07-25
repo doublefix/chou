@@ -1,10 +1,8 @@
 "use client";
 
-import { mutate } from "swr";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
-import { authenticate } from "@/lib/actions";
 import {
   Card,
   CardContent,
@@ -24,27 +22,49 @@ export function LoginForm({ loginChallenge }: { loginChallenge?: string }) {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPending(true);
+    setErrorMessage(null);
 
     const formData = new FormData(event.currentTarget);
-
-    if (loginChallenge) {
-      formData.append("login_challenge", loginChallenge);
-    }
+    const identifier = formData.get("identifier")?.toString() || "";
+    const password = formData.get("password")?.toString() || "";
 
     try {
-      const result = await mutate("/api/v1/auth/token/access", () =>
-        authenticate(formData)
-      );
-      if (result?.redirect) {
-        setErrorMessage(null);
-        router.push(result.redirect);
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setErrorMessage(error.message || "登录失败，请联系管理员。");
+      // 1. 获取 flow_id
+      const flowRes = await fetch("http://10.187.6.190/api/v1/flow");
+      const flowData = await flowRes.json();
+
+      const flowId = flowData.flow_id;
+      if (!flowId) throw new Error("无法获取 flow_id");
+
+      // 2. 构造登录请求体
+      const payload = {
+        flow_id: flowId,
+        identifier,
+        password,
+        login_challenge: loginChallenge ?? "",
+      };
+
+      // 3. 登录请求
+      const loginRes = await fetch("http://10.187.6.190/api/v1/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const loginResult = await loginRes.json();
+      console.log("[LOGIN RESPONSE]", loginRes.status, loginResult); // ✅ 打印响应内容
+
+      if (loginRes.status === 200) {
+        // 登录成功，跳转
+        router.push(loginResult.redirect || "/");
       } else {
-        setErrorMessage("登录失败，请联系管理员。");
+        setErrorMessage(loginResult.error || "登录失败，请检查用户名或密码。");
       }
+    } catch (err: any) {
+      console.error("[LOGIN ERROR]", err);
+      setErrorMessage(err.message || "登录失败，请联系管理员。");
     } finally {
       setPending(false);
     }
