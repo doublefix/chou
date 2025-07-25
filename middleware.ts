@@ -14,9 +14,10 @@ export async function middleware(request: NextRequest) {
 
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
+  const url = request.nextUrl;
+  const query = url.searchParams;
 
   const publicPaths = [
-    "/login",
     "/join",
     "/oauth2/auth",
     "/consent",
@@ -24,9 +25,10 @@ export async function middleware(request: NextRequest) {
     "/auth",
   ];
 
-  const isPublic = publicPaths.some((path) => pathname.startsWith(path));
+  const isPublic =
+    publicPaths.some((path) => pathname.startsWith(path)) ||
+    (pathname === "/login" && query.has("login_challenge")); // 允许带 login_challenge 的 /login 被放行
 
-  // 👉 公共路径放行（即使未登录也能访问）
   if (isPublic) {
     return response;
   }
