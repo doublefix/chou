@@ -24,7 +24,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // access_token 已过期，尝试用 refresh_token 刷新
   if (isExpired && refreshToken) {
     const data = await fetchTokenDetail(refreshToken);
     if (data) {
@@ -45,11 +44,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 重定向逻辑
+  // 👉 ① 未登录，重定向到 OAuth 授权
   if (isExpired && pathname !== "/login" && pathname !== "/join") {
-    return redirectTo(request, "/login");
+    return redirectToOAuth(request);
   }
 
+  // 👉 ② 已登录但访问登录页，跳转到主页
   if (!isExpired && (pathname === "/login" || pathname === "/join")) {
     return redirectTo(request, "/home");
   }
@@ -63,7 +63,21 @@ function redirectTo(request: NextRequest, pathname: string) {
   return NextResponse.redirect(url);
 }
 
-// ✅ 使用 JWT 本地解析是否过期
+// ✅ OAuth 重定向逻辑
+function redirectToOAuth(request: NextRequest): NextResponse {
+  const state = crypto.randomUUID();
+  const oauthURL = new URL("http://10.187.6.190/oauth2/auth");
+
+  oauthURL.searchParams.set("client_id", "dev");
+  oauthURL.searchParams.set("response_type", "code");
+  oauthURL.searchParams.set("scope", "openid");
+  oauthURL.searchParams.set("state", state);
+  oauthURL.searchParams.set("redirect_uri", "http://10.187.6.190/auth");
+
+  return NextResponse.redirect(oauthURL.toString());
+}
+
+// ✅ JWT 本地解析是否过期
 function checkJwtTokenExpired(token: string): boolean {
   const [, payloadBase64] = token.split(".");
   if (!payloadBase64) throw new Error("Invalid JWT format");
