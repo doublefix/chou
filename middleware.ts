@@ -3,7 +3,6 @@ import type { NextRequest } from "next/server";
 
 export const config = {
   matcher: [
-    // 匹配所有除 static/api 等路径以外的请求
     "/((?!api|_next/static|favicon.ico|.*\\.(?:css|js|map|jpg|jpeg|png|gif|svg|webp|woff|woff2|eot|ttf|otf)).*)",
   ],
 };
@@ -12,13 +11,12 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
   const pathname = url.pathname;
   const query = url.searchParams;
-  const response = NextResponse.next();
+  let response = NextResponse.next();
 
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
 
   const isLoginPath = pathname === "/login";
-
   const publicPaths = [
     "/join",
     "/oauth2/auth",
@@ -26,94 +24,84 @@ export async function middleware(request: NextRequest) {
     "/auth/callback",
     "/auth",
   ];
-
   const isPublic =
     publicPaths.some((path) => pathname.startsWith(path)) ||
     (isLoginPath && query.has("login_challenge"));
 
-  // ✅ 日志：打印请求路径及是否为公开路径
-  console.log("🔍 Incoming request:", pathname);
-  console.log("🔓 Is public path:", isPublic);
-  console.log("🍪 Has access_token:", !!accessToken);
-  console.log("🍪 Has refresh_token:", !!refreshToken);
-
-  // ❗️如果访问 /login 但没带 login_challenge，直接重定向 OAuth
+  // ❗️ /login 但没 login_challenge，重定向到 OAuth
   if (isLoginPath && !query.has("login_challenge")) {
-    console.log("⚠️ /login without login_challenge, redirecting to OAuth...");
     return redirectToOAuth(request);
   }
 
-  // if (isLoginPath && query.has("login_challenge")) {
-  //   console.log("⚠️ /login without login_challenge, redirecting to OAuth...");
-  //   return redirectToOAuth(request);
-  // }
+  if (isPublic) return response;
 
-  if (isPublic) {
-    return response;
-  }
-
-  // ✅ 判断 access_token 是否过期
   let isExpired = true;
   if (accessToken) {
     try {
       isExpired = checkJwtTokenExpired(accessToken);
-      console.log("🕒 Token expired?", isExpired);
     } catch (err) {
       console.error("❌ Failed to decode token:", err);
     }
-  } else {
-    console.log("⚠️ No access_token found, treating as expired.");
   }
 
-  // ✅ 尝试刷新 token
   if (isExpired && refreshToken) {
-    console.log("🔄 Attempting to refresh access_token...");
-    const data = await fetchTokenDetail(refreshToken);
-    if (data) {
-      const newAccessToken = data.access_token;
-      const accessTokenTTL =
-        data.access_token_ttl > 0 ? data.access_token_ttl : 3600;
-      const path = data.path || "/";
+    const refreshed = await tryRefreshToken(refreshToken);
 
-      response.cookies.set("access_token", newAccessToken, {
-        maxAge: accessTokenTTL,
-        path,
+    if (refreshed) {
+      const {
+        access_token,
+        expires_in,
+        refresh_token: newRefreshToken,
+      } = refreshed;
+
+      response.cookies.set("access_token", access_token, {
+        maxAge: expires_in,
         httpOnly: true,
-        secure: true,
+        // secure: true,
         sameSite: "strict",
+        path: "/",
       });
 
+      if (newRefreshToken) {
+        response.cookies.set("refresh_token", newRefreshToken, {
+          maxAge: 7 * 24 * 60 * 60, // 一周
+          httpOnly: true,
+          // secure: true,
+          sameSite: "strict",
+          path: "/",
+        });
+      }
+
       isExpired = false;
-      console.log("✅ Token refreshed successfully.");
     } else {
-      console.warn("⚠️ Refresh failed.");
+      response.cookies.delete("access_token");
+      response.cookies.delete("refresh_token");
+      response.cookies.delete("id_token");
+      return redirectToOAuth(request, response);
     }
   }
 
-  // 👉 ① 未登录，重定向到 OAuth 授权
-  if (isExpired) {
-    console.log("🔐 User is not logged in, redirecting to OAuth...");
-    return redirectToOAuth(request);
-  }
+  // 👉 未登录
+  if (isExpired) return redirectToOAuth(request);
 
-  // 👉 ② 已登录但访问 login 或 join，重定向到 /home
-  if (!isExpired && (pathname === "/login" || pathname === "/join")) {
-    console.log("✅ Already logged in, redirecting from", pathname, "to /home");
+  // 👉 已登录但访问 login 或 join，重定向到 /home
+  if (pathname === "/login" || pathname === "/join") {
     return redirectTo(request, "/home");
   }
 
   return response;
 }
 
-// ✅ 内部页面重定向
-function redirectTo(request: NextRequest, pathname: string) {
+function redirectTo(request: NextRequest, pathname: string): NextResponse {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
   return NextResponse.redirect(url);
 }
 
-// ✅ OAuth 登录重定向逻辑
-function redirectToOAuth(request: NextRequest): NextResponse {
+function redirectToOAuth(
+  request: NextRequest,
+  response?: NextResponse
+): NextResponse {
   const state = crypto.randomUUID();
   const oauthURL = new URL("http://10.187.6.190/oauth2/auth");
 
@@ -121,14 +109,19 @@ function redirectToOAuth(request: NextRequest): NextResponse {
   oauthURL.searchParams.set("response_type", "code");
   oauthURL.searchParams.set("scope", "openid");
   oauthURL.searchParams.set("state", state);
-
-  // ⚠️ redirect_uri 建议配置为固定值
   oauthURL.searchParams.set("redirect_uri", "http://10.187.6.190/auth");
 
-  return NextResponse.redirect(oauthURL.toString());
+  const redirect = NextResponse.redirect(oauthURL.toString());
+  if (response) {
+    for (const [name, cookie] of Object.entries(response.cookies.getAll())) {
+      redirect.cookies.set(name, cookie.value, {
+        ...cookie,
+      });
+    }
+  }
+  return redirect;
 }
 
-// ✅ 检查 access_token 是否过期
 function checkJwtTokenExpired(token: string): boolean {
   const [, payloadBase64] = token.split(".");
   if (!payloadBase64) throw new Error("Invalid JWT format");
@@ -142,28 +135,31 @@ function checkJwtTokenExpired(token: string): boolean {
   return payload.exp < now;
 }
 
-// 🔄 使用 refresh_token 刷新 access_token
-async function fetchTokenDetail(refreshToken: string): Promise<any> {
+async function tryRefreshToken(refreshToken: string): Promise<any | null> {
   try {
-    const response = await fetch(
-      "http://localhost:8080/api/v1/auth/token/refresh/detail",
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${refreshToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const res = await fetch("http://10.187.6.190/oauth2/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        client_id: "dev",
+        redirect_uri: "http://10.187.6.190/auth",
+        refresh_token: refreshToken,
+      }),
+    });
 
-    if (response.ok) {
-      return await response.json();
-    } else {
-      console.error("Failed to fetch token detail:", response.status);
+    if (!res.ok) {
+      console.warn("🔁 Token refresh failed with status:", res.status);
       return null;
     }
-  } catch (err) {
-    console.error("Error while fetching token detail:", err);
+
+    const json = await res.json();
+    // console.log("✅ Token refresh success:", json);
+    return json;
+  } catch (error) {
+    // console.error("❌ Token refresh error:", error);
     return null;
   }
 }
