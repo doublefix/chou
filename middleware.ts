@@ -53,6 +53,7 @@ if (isPublicPath) return NextResponse.next();
     if (refreshed) {
       const {
         access_token,
+        id_token,
         expires_in,
         refresh_token: newRefreshToken,
       } = refreshed;
@@ -61,6 +62,7 @@ if (isPublicPath) return NextResponse.next();
       setAuthCookies(
         response,
         access_token,
+        id_token,
         expires_in,
         newRefreshToken,
         hostname
@@ -172,6 +174,7 @@ async function tryRefreshToken(refreshToken: string): Promise<any | null> {
 function setAuthCookies(
   response: NextResponse,
   accessToken: string,
+  idToken: string,
   maxAge: number,
   refreshToken?: string,
   hostname?: string
@@ -186,9 +189,17 @@ function setAuthCookies(
     path: "/",
   });
 
+    response.cookies.set("id_token", accessToken, {
+    maxAge,
+    httpOnly: true,
+    secure,
+    sameSite: "strict",
+    path: "/",
+  });
+
   if (refreshToken) {
     response.cookies.set("refresh_token", refreshToken, {
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60,
       httpOnly: true,
       secure,
       sameSite: "strict",
