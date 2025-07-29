@@ -14,19 +14,9 @@ export async function middleware(request: NextRequest) {
   const refreshToken = request.cookies.get("refresh_token")?.value;
 
   const isLoginPath = pathname === "/login";
-// ✅ 登录页但缺 login_challenge，跳 OAuth
-if (pathname === "/login" && !searchParams.has("login_challenge")) {
-  return redirectToOAuth();
-}
-
-// ✅ 如果有 access_token 并访问 /login 或 /join，重定向到 /home
-if (accessToken && (pathname === "/login" || pathname === "/join")) {
-  return redirectToClean("/home", request);
-}
-
-// ✅ 公开路径放行（必须放在最后）
-const isPublicPath = PUBLIC_PATHS.some((path) => pathname.startsWith(path));
-if (isPublicPath) return NextResponse.next();
+  const isPublicPath =
+    PUBLIC_PATHS.some((path) => pathname.startsWith(path)) ||
+    (isLoginPath && searchParams.has("login_challenge"));
 
   // ✅ 登录页但缺 login_challenge，跳 OAuth
   if (isLoginPath && !searchParams.has("login_challenge")) {
