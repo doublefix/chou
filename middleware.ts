@@ -189,7 +189,7 @@ function setAuthCookies(
     path: "/",
   });
 
-    response.cookies.set("id_token", accessToken, {
+    response.cookies.set("id_token", idToken, {
     maxAge,
     httpOnly: true,
     secure,
