@@ -1,5 +1,4 @@
-import { ChartAreaInteractive } from "@/components/dashboard/chart-area-interactive";
-import { DataTable } from "@/components/dashboard/data-table";
+import { DataTable } from "@/components/dashboard/data-table-node";
 import { SectionCards } from "@/components/dashboard/section-cards";
 
 import data from "./data.json";
@@ -16,3 +15,7 @@ export default function Page() {
      </div>
   );
 }
+
+// 采用状态提升,单向数据流
+// 使用useState + useEffect实现单向数据流
+// 数据请求放在父页面是“常规做法”
