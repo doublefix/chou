@@ -1,0 +1,99 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+
+type Query {
+  todos: [Todo!]!
+  paginatedNodes(limit: Int, continueToken: String): NodePage!
+  node(name: String!): Node
+  pods(namespace: String): [Pod!]!
+  pod(name: String!, namespace: String!): Pod
+}
+
+type Mutation {
+  createTodo(input: NewTodo!): Todo!
+  createDeployment(input: NewDeployment!): Deployment!
+  deleteDeployment(name: String!, namespace: String!): Boolean!
+}
+
+input NewTodo {
+  text: String!
+  userId: String!
+}
+
+type Todo {
+  id: ID!
+  text: String!
+  done: Boolean!
+  user: User!
+}
+
+type User {
+  id: ID!
+  name: String!
+}
+
+type NodePage {
+  items: [Node!]!
+  continueToken: String
+}
+
+type Node {       
+  name: String!   
+  cpu: String!    
+  memory: String! 
+  gpu: String!    
+  status: String! 
+  arch: String!   
+  ip: String!     
+  role: String!   
+  os: String!     
+  kernel: String! 
+  runtime: String!
+  kubelet: String!
+  age: String!    
+}
+
+type Pod {
+  name: String!
+  namespace: String!
+  status: String!
+  nodeName: String!
+  podIP: String
+  restarts: Int!
+  startTime: String!
+  age: String!
+  containers: [Container!]!
+}
+
+type Container {
+  name: String!
+  image: String!
+  ready: Boolean!
+  restartCount: Int!
+}
+
+type Deployment {
+  name: String!
+  namespace: String!
+  replicas: Int!
+  image: String!
+  cpuRequest: String!
+  cpuLimit: String!
+  memoryRequest: String!
+  memoryLimit: String!
+  status: String!
+  createdAt: String!
+}
+
+input NewDeployment {
+  name: String!
+  namespace: String!
+  replicas: Int!
+  image: String!
+  cpuRequest: String!
+  cpuLimit: String!
+  memoryRequest: String!
+  memoryLimit: String!
+}

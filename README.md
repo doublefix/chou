@@ -94,6 +94,14 @@ http+https+ci
 https://stackoverflow.com/questions/64386737/how-to-deploy-nextjs-with-nginx
 
 
+## graphql代码生成
+```bash
+pnpm add -D typescript @graphql-codegen/cli
+pnpm graphql-codegen init 
+
+pnpm run codegen
+```
+
 
 ## 本地调试
 ```bash
