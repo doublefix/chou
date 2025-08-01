@@ -1,9 +1,30 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useGetNodesQuery } from "@/hooks/graphql-generated";
+
 import { DataTable } from "@/components/dashboard/data-table-node";
 import { SectionCards } from "@/components/dashboard/section-cards";
 
 import data from "./data.json";
 
 export default function Page() {
+  const [remoteNodes, setRemoteNodes] = useState<any[]>([]);
+
+  const { data: queryData, loading, error } = useGetNodesQuery({
+    variables: {
+      limit: 3,
+      continueToken: "",
+    },
+  });
+
+  useEffect(() => {
+    if (queryData?.paginatedNodes?.items) {
+      setRemoteNodes(queryData.paginatedNodes.items);
+      console.log("Fetched nodes from GraphQL:", queryData.paginatedNodes.items);
+    }
+  }, [queryData]);
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
@@ -12,10 +33,9 @@ export default function Page() {
           <DataTable data={data} />
         </div>
       </div>
-     </div>
+    </div>
   );
 }
 
-// 采用状态提升,单向数据流
-// 使用useState + useEffect实现单向数据流
+// 采用状态提升,单向数据流,使用useState + useEffect实现单向数据流
 // 数据请求放在父页面是“常规做法”
