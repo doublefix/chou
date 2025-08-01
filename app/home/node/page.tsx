@@ -6,7 +6,7 @@ import { useGetNodesQuery } from "@/hooks/graphql-generated";
 import { DataTable } from "@/components/dashboard/data-table-node";
 import { SectionCards } from "@/components/dashboard/section-cards";
 
-import data from "./data.json";
+// import data from "./data.json";
 
 export default function Page() {
   const [remoteNodes, setRemoteNodes] = useState<any[]>([]);
@@ -25,7 +25,8 @@ export default function Page() {
     }
   }, [queryData]);
 
-  // const nodes = queryData?.paginatedNodes?.items ?? [];
+  const data = queryData?.paginatedNodes?.items ?? [];
+
 
   return (
     <div className="flex flex-1 flex-col">
