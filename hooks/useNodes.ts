@@ -1,16 +1,44 @@
 import useSWR from "swr";
-import { fetcher } from "@/lib/api";
+import { graphqlFetcher } from "@/lib/graphql";
 
-export function useNodes(page = 1, limit = 20) {
-  const { data, error, isLoading } = useSWR(
-    `/api/nodes?page=${page}&limit=${limit}`,
-    fetcher
+const query = `
+  query GetNodes($limit: Int!, $continueToken: String) {
+    paginatedNodes(limit: $limit, continueToken: $continueToken) {
+      items {
+        name
+        cpu
+        memory
+        gpu
+      }
+      continueToken
+    }
+  }
+`;
+
+interface Node {
+  name: string;
+  cpu: string;
+  memory: string;
+  gpu: string;
+}
+
+interface PaginatedNodesResponse {
+  paginatedNodes: {
+    items: Node[];
+    continueToken?: string;
+  };
+}
+
+export function usePaginatedNodes(limit: number, continueToken?: string) {
+  const { data, error, isLoading } = useSWR<PaginatedNodesResponse>(
+    [query, { limit, continueToken }],
+    ([q, variables]) => graphqlFetcher({ query: q, variables })
   );
 
   return {
-    data: data?.items || [],
-    total: data?.total,
-    error,
+    nodes: data?.paginatedNodes.items ?? [],
+    continueToken: data?.paginatedNodes.continueToken,
     isLoading,
+    error,
   };
 }
