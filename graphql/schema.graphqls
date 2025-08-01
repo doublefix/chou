@@ -39,7 +39,8 @@ type NodePage {
   continueToken: String
 }
 
-type Node {       
+type Node {     
+  id: String!   
   name: String!   
   cpu: String!    
   memory: String! 

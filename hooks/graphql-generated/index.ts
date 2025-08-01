@@ -84,6 +84,7 @@ export type Node = {
   arch: Scalars['String']['output'];
   cpu: Scalars['String']['output'];
   gpu: Scalars['String']['output'];
+  id: Scalars['String']['output'];
   ip: Scalars['String']['output'];
   kernel: Scalars['String']['output'];
   kubelet: Scalars['String']['output'];
@@ -165,16 +166,18 @@ export type GetNodesQueryVariables = Exact<{
 }>;
 
 
-export type GetNodesQuery = { __typename?: 'Query', paginatedNodes: { __typename?: 'NodePage', continueToken?: string | null, items: Array<{ __typename?: 'Node', name: string, cpu: string, memory: string }> } };
+export type GetNodesQuery = { __typename?: 'Query', paginatedNodes: { __typename?: 'NodePage', continueToken?: string | null, items: Array<{ __typename?: 'Node', id: string, name: string, cpu: string, memory: string, gpu: string }> } };
 
 
 export const GetNodesDocument = gql`
     query GetNodes($limit: Int, $continueToken: String) {
   paginatedNodes(limit: $limit, continueToken: $continueToken) {
     items {
+      id
       name
       cpu
       memory
+      gpu
     }
     continueToken
   }
