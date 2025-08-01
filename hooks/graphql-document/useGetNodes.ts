@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client";
 
 export const GET_NODES = gql`
   query GetNodes($limit: Int, $continueToken: String) {
@@ -9,6 +9,15 @@ export const GET_NODES = gql`
         cpu
         memory
         gpu
+        status
+        arch
+        ip
+        role
+        os
+        kernel
+        runtime
+        kubelet
+        age
       }
       continueToken
     }

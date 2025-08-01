@@ -166,7 +166,7 @@ export type GetNodesQueryVariables = Exact<{
 }>;
 
 
-export type GetNodesQuery = { __typename?: 'Query', paginatedNodes: { __typename?: 'NodePage', continueToken?: string | null, items: Array<{ __typename?: 'Node', id: string, name: string, cpu: string, memory: string, gpu: string }> } };
+export type GetNodesQuery = { __typename?: 'Query', paginatedNodes: { __typename?: 'NodePage', continueToken?: string | null, items: Array<{ __typename?: 'Node', id: string, name: string, cpu: string, memory: string, gpu: string, status: string, arch: string, ip: string, role: string, os: string, kernel: string, runtime: string, kubelet: string, age: string }> } };
 
 
 export const GetNodesDocument = gql`
@@ -178,6 +178,15 @@ export const GetNodesDocument = gql`
       cpu
       memory
       gpu
+      status
+      arch
+      ip
+      role
+      os
+      kernel
+      runtime
+      kubelet
+      age
     }
     continueToken
   }
