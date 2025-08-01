@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { fontMono, fontSans } from "@/lib/fonts";
 // import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { GraphqlProviders } from "./providers";
 
 // const geistSans = Geist({
 //   variable: "--font-geist-sans",
@@ -33,7 +34,7 @@ export default function RootLayout({
           fontMono.variable
         )}
       >
-        {children}
+        <GraphqlProviders>{children}</GraphqlProviders>
       </body>
     </html>
   );

@@ -100,6 +100,11 @@ pnpm add -D typescript @graphql-codegen/cli
 pnpm graphql-codegen init 
 
 pnpm run codegen
+
+# 依赖 graphql-generated apollo
+# 官方文档：https://the-guild.dev/graphql/codegen
+# 需要配置 <GraphqlProviders>{children}</GraphqlProviders>
+
 ```
 
 
