@@ -318,6 +318,7 @@ export function DataTable({
   onPrevPage,
   onFirstPage,
   onPageSizeChange,
+  pageSize: parentPageSize, // 接收父组件的pageSize
   hasNextPage,
   hasPrevPage,
   loading,
@@ -327,6 +328,7 @@ export function DataTable({
   onPrevPage: () => void;
   onFirstPage: () => void;
   onPageSizeChange: (size: number) => void;
+  pageSize: number; // 新增props
   hasNextPage: boolean;
   hasPrevPage: boolean;
   loading: boolean;
@@ -348,7 +350,7 @@ export function DataTable({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: parentPageSize,
   });
   const sortableId = React.useId();
   const sensors = useSensors(

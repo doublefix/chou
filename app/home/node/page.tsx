@@ -78,6 +78,7 @@ export default function Page() {
             onPrevPage={handlePrevPage}
             onFirstPage={handleFirstPage}
             onPageSizeChange={handlePageSizeChange}
+            pageSize={pageSize} // 传递当前pageSize
             hasNextPage={!!queryData?.paginatedNodes?.continueToken}
             hasPrevPage={currentPageIndex > 0}
             loading={loading}
