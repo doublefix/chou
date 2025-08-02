@@ -248,7 +248,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     accessorKey: "runtime",
     header: "Runtime",
     cell: ({ row }) => (
-      <div className="w-20 truncate">
+      <div className="w-10 truncate">
         {row.original.runtime.replace("containerd://", "")}
       </div>
     ),
