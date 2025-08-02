@@ -130,154 +130,6 @@ function DragHandle({ id }: { id: string }) {
   );
 }
 
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
-  {
-    id: "drag",
-    header: () => null,
-    cell: ({ row }) => <DragHandle id={row.original.id} />,
-  },
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => {
-      return <TableCellViewer item={row.original} />;
-    },
-    enableHiding: false,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <Badge
-        variant="outline"
-        className="flex gap-1 px-1.5 text-muted-foreground [&_svg]:size-3"
-      >
-        {row.original.status === "Ready" ? (
-          <CheckCircle2Icon className="text-green-500 dark:text-green-400" />
-        ) : (
-          <LoaderIcon />
-        )}
-        {row.original.status}
-      </Badge>
-    ),
-  },
-  {
-    accessorKey: "cpu",
-    header: "CPU",
-    cell: ({ row }) => <div className="text-right">{row.original.cpu}</div>,
-  },
-  {
-    accessorKey: "memory",
-    header: "Memory",
-    cell: ({ row }) => <div className="text-right">{row.original.memory}</div>,
-  },
-  // 新增架构字段
-  {
-    accessorKey: "arch",
-    header: "Arch",
-    cell: ({ row }) => (
-      <Badge variant="outline" className="px-1.5">
-        {row.original.arch}
-      </Badge>
-    ),
-    size: 80, // 固定列宽
-  },
-  // 新增角色字段
-  {
-    accessorKey: "role",
-    header: "Role",
-    cell: ({ row }) => (
-      <div className="w-24 truncate">
-        {row.original.role || (
-          <span className="text-muted-foreground">None</span>
-        )}
-      </div>
-    ),
-    size: 100,
-  },
-  {
-    accessorKey: "ip",
-    header: "IP Address",
-    cell: ({ row }) => <div className="w-24 truncate">{row.original.ip}</div>,
-  },
-  {
-    accessorKey: "os",
-    header: "OS",
-    cell: ({ row }) => (
-      <div className="w-20 truncate">
-        {row.original.os.split(" ")[0]} {/* 只显示操作系统名称 */}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "runtime",
-    header: "Runtime",
-    cell: ({ row }) => (
-      <div className="w-10 truncate">
-        {row.original.runtime.replace("containerd://", "")}
-      </div>
-    ),
-    size: 120,
-  },
-  {
-    accessorKey: "age",
-    header: "Created",
-    cell: ({ row }) => {
-      const date = new Date(row.original.age);
-      return <div className="w-24 text-sm">{date.toLocaleDateString()}</div>;
-    },
-  },
-  {
-    id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-            size="icon"
-          >
-            <MoreVerticalIcon />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-];
-
 function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
@@ -336,17 +188,16 @@ export function DataTable({
     pageIndex: 0,
     pageSize: parentPageSize,
   });
-  const [isMounted, setIsMounted] = React.useState(false);
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
 
   React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  React.useEffect(() => {
-    if (isMounted && initialData && initialData.length > 0) {
+    if (initialData && initialData.length > 0) {
       setData(initialData);
+      setIsInitialLoad(false);
+    } else if (!loading && initialData.length === 0) {
+      setIsInitialLoad(false);
     }
-  }, [initialData, isMounted]);
+  }, [initialData, loading]);
 
   const sortableId = React.useId();
   const sensors = useSensors(
@@ -358,6 +209,161 @@ export function DataTable({
   const dataIds = React.useMemo<UniqueIdentifier[]>(
     () => data?.map(({ id }) => id) || [],
     [data]
+  );
+
+  const columns = React.useMemo<ColumnDef<z.infer<typeof schema>>[]>(
+    () => [
+      {
+        id: "drag",
+        header: () => null,
+        cell: ({ row }) => <DragHandle id={row.original.id} />,
+      },
+      {
+        id: "select",
+        header: ({ table }) => (
+          <div className="flex items-center justify-center">
+            <Checkbox
+              onCheckedChange={(value) =>
+                table.toggleAllPageRowsSelected(!!value)
+              }
+              aria-label="Select all"
+            />
+          </div>
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center justify-center">
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label="Select row"
+            />
+          </div>
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
+      {
+        accessorKey: "name",
+        header: "Name",
+        cell: ({ row }) => {
+          return <TableCellViewer item={row.original} />;
+        },
+        enableHiding: false,
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+          <Badge
+            variant="outline"
+            className="flex gap-1 px-1.5 text-muted-foreground [&_svg]:size-3"
+          >
+            {row.original.status === "Ready" ? (
+              <CheckCircle2Icon className="text-green-500 dark:text-green-400" />
+            ) : (
+              <LoaderIcon />
+            )}
+            {row.original.status}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: "cpu",
+        header: "CPU",
+        cell: ({ row }) => <div className="text-right">{row.original.cpu}</div>,
+      },
+      {
+        accessorKey: "memory",
+        header: "Memory",
+        cell: ({ row }) => (
+          <div className="text-right">{row.original.memory}</div>
+        ),
+      },
+      // 新增架构字段
+      {
+        accessorKey: "arch",
+        header: "Arch",
+        cell: ({ row }) => (
+          <Badge variant="outline" className="px-1.5">
+            {row.original.arch}
+          </Badge>
+        ),
+        size: 80, // 固定列宽
+      },
+      // 新增角色字段
+      {
+        accessorKey: "role",
+        header: "Role",
+        cell: ({ row }) => (
+          <div className="w-24 truncate">
+            {row.original.role || (
+              <span className="text-muted-foreground">None</span>
+            )}
+          </div>
+        ),
+        size: 100,
+      },
+      {
+        accessorKey: "ip",
+        header: "IP Address",
+        cell: ({ row }) => (
+          <div className="w-24 truncate">{row.original.ip}</div>
+        ),
+      },
+      {
+        accessorKey: "os",
+        header: "OS",
+        cell: ({ row }) => (
+          <div className="w-20 truncate">
+            {row.original.os.split(" ")[0]} {/* 只显示操作系统名称 */}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "runtime",
+        header: "Runtime",
+        cell: ({ row }) => (
+          <div className="w-10 truncate">
+            {row.original.runtime.replace("containerd://", "")}
+          </div>
+        ),
+        size: 120,
+      },
+      {
+        accessorKey: "age",
+        header: "Created",
+        cell: ({ row }) => {
+          const date = new Date(row.original.age);
+          return (
+            <div className="w-24 text-sm">{date.toLocaleDateString()}</div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        cell: () => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+                size="icon"
+              >
+                <MoreVerticalIcon />
+                <span className="sr-only">Open menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32">
+              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem>Make a copy</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    []
   );
 
   const table = useReactTable({
@@ -395,6 +401,8 @@ export function DataTable({
       });
     }
   }
+
+  const showSkeleton = loading && isInitialLoad;
 
   return (
     <Tabs
@@ -513,7 +521,7 @@ export function DataTable({
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {loading ? (
+                {showSkeleton ? (
                   <DataTableSkeleton pageSize={parentPageSize} />
                 ) : table.getRowModel().rows?.length ? (
                   <SortableContext

@@ -24,7 +24,7 @@ export default function Page() {
       continueToken:
         currentPageIndex > 0 ? continueTokens[currentPageIndex - 1] : "",
     },
-    skip: !isMounted, // 只在组件挂载后执行查询
+    skip: !isMounted, // Only execute query after component mounts
   });
 
   useEffect(() => {
@@ -70,15 +70,13 @@ export default function Page() {
     setContinueTokens([]);
   };
 
-  const data = queryData?.paginatedNodes?.items ?? [];
-
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <SectionCards />
           <DataTable
-            data={data}
+            data={queryData?.paginatedNodes?.items || []}
             onNextPage={handleNextPage}
             onPrevPage={handlePrevPage}
             onFirstPage={handleFirstPage}
@@ -86,7 +84,7 @@ export default function Page() {
             pageSize={pageSize}
             hasNextPage={!!queryData?.paginatedNodes?.continueToken}
             hasPrevPage={currentPageIndex > 0}
-            loading={loading}
+            loading={!isMounted || loading} // Include !isMounted in loading state
           />
         </div>
       </div>
