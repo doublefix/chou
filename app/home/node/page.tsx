@@ -6,8 +6,6 @@ import { useGetNodesQuery } from "@/hooks/graphql-generated";
 import { DataTable } from "@/components/dashboard/data-table-node";
 import { SectionCards } from "@/components/dashboard/section-cards";
 
-// import data from "./data.json";
-
 export default function Page() {
   const [remoteNodes, setRemoteNodes] = useState<any[]>([]);
 
@@ -21,7 +19,6 @@ export default function Page() {
   useEffect(() => {
     if (queryData?.paginatedNodes?.items) {
       setRemoteNodes(queryData.paginatedNodes.items);
-      console.log("Fetched nodes from GraphQL:", queryData.paginatedNodes.items);
     }
   }, [queryData]);
 
