@@ -336,12 +336,17 @@ export function DataTable({
     pageIndex: 0,
     pageSize: parentPageSize,
   });
-  
+  const [isMounted, setIsMounted] = React.useState(false);
+
   React.useEffect(() => {
-    if (initialData && initialData.length > 0) {
-      setData(initialData); // 父组件数据更新时同步到 state
+    setIsMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (isMounted && initialData && initialData.length > 0) {
+      setData(initialData);
     }
-  }, [initialData]);
+  }, [initialData, isMounted]);
 
   const sortableId = React.useId();
   const sensors = useSensors(

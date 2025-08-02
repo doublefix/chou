@@ -8,9 +8,10 @@ import { SectionCards } from "@/components/dashboard/section-cards";
 
 export default function Page() {
   const [remoteNodes, setRemoteNodes] = useState<any[]>([]);
-  const [continueTokens, setContinueTokens] = useState<string[]>([]); // To track pagination history
+  const [continueTokens, setContinueTokens] = useState<string[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(2); // Default page size
+  const [pageSize, setPageSize] = useState(2);
+  const [isMounted, setIsMounted] = useState(false);
 
   const {
     data: queryData,
@@ -23,13 +24,17 @@ export default function Page() {
       continueToken:
         currentPageIndex > 0 ? continueTokens[currentPageIndex - 1] : "",
     },
+    skip: !isMounted, // 只在组件挂载后执行查询
   });
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     if (queryData?.paginatedNodes?.items) {
       setRemoteNodes(queryData.paginatedNodes.items);
 
-      // Update continue tokens history if this is a new page
       if (
         queryData.paginatedNodes.continueToken &&
         (currentPageIndex >= continueTokens.length ||
@@ -41,7 +46,7 @@ export default function Page() {
         setContinueTokens(newTokens);
       }
     }
-  }, [queryData]);
+  }, [queryData, currentPageIndex, continueTokens]);
 
   const handleNextPage = () => {
     if (queryData?.paginatedNodes?.continueToken) {
@@ -78,7 +83,7 @@ export default function Page() {
             onPrevPage={handlePrevPage}
             onFirstPage={handleFirstPage}
             onPageSizeChange={handlePageSizeChange}
-            pageSize={pageSize} // 传递当前pageSize
+            pageSize={pageSize}
             hasNextPage={!!queryData?.paginatedNodes?.continueToken}
             hasPrevPage={currentPageIndex > 0}
             loading={loading}
