@@ -12,21 +12,30 @@ export default function Page() {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(2); // Default page size
 
-  const { data: queryData, loading, error, refetch } = useGetNodesQuery({
+  const {
+    data: queryData,
+    loading,
+    error,
+    refetch,
+  } = useGetNodesQuery({
     variables: {
       limit: pageSize,
-      continueToken: currentPageIndex > 0 ? continueTokens[currentPageIndex - 1] : "",
+      continueToken:
+        currentPageIndex > 0 ? continueTokens[currentPageIndex - 1] : "",
     },
   });
 
   useEffect(() => {
     if (queryData?.paginatedNodes?.items) {
       setRemoteNodes(queryData.paginatedNodes.items);
-      
+
       // Update continue tokens history if this is a new page
-      if (queryData.paginatedNodes.continueToken && 
-          (currentPageIndex >= continueTokens.length || 
-           continueTokens[currentPageIndex] !== queryData.paginatedNodes.continueToken)) {
+      if (
+        queryData.paginatedNodes.continueToken &&
+        (currentPageIndex >= continueTokens.length ||
+          continueTokens[currentPageIndex] !==
+            queryData.paginatedNodes.continueToken)
+      ) {
         const newTokens = [...continueTokens];
         newTokens[currentPageIndex] = queryData.paginatedNodes.continueToken;
         setContinueTokens(newTokens);
@@ -36,13 +45,13 @@ export default function Page() {
 
   const handleNextPage = () => {
     if (queryData?.paginatedNodes?.continueToken) {
-      setCurrentPageIndex(prev => prev + 1);
+      setCurrentPageIndex((prev) => prev + 1);
     }
   };
 
   const handlePrevPage = () => {
     if (currentPageIndex > 0) {
-      setCurrentPageIndex(prev => prev - 1);
+      setCurrentPageIndex((prev) => prev - 1);
     }
   };
 
@@ -63,8 +72,8 @@ export default function Page() {
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <SectionCards />
-          <DataTable 
-            data={data} 
+          <DataTable
+            data={data}
             onNextPage={handleNextPage}
             onPrevPage={handlePrevPage}
             onFirstPage={handleFirstPage}
