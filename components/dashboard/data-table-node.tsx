@@ -49,6 +49,8 @@ import {
 } from "lucide-react";
 import { DataTableSkeleton } from "@/components/dashboard/data-table-node-skeleton";
 
+import { Loader2, RefreshCw, RotateCw } from "lucide-react";
+
 import { z } from "zod";
 
 import { useIsMobile } from "@/components/ui/hooks/use-mobile";
@@ -165,6 +167,7 @@ export function DataTable({
   hasNextPage,
   hasPrevPage,
   loading,
+  onRefresh,
 }: {
   data: z.infer<typeof schema>[];
   onNextPage: () => void;
@@ -175,6 +178,7 @@ export function DataTable({
   hasNextPage: boolean;
   hasPrevPage: boolean;
   loading: boolean;
+  onRefresh?: () => void;
 }) {
   const [data, setData] = React.useState<z.infer<typeof schema>[]>([]);
   const [rowSelection, setRowSelection] = React.useState({});
@@ -403,21 +407,37 @@ export function DataTable({
   }
 
   const showSkeleton = loading && isInitialLoad;
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  // Refresh button
+  const handleRefreshClick = async () => {
+    setIsRefreshing(true);
+    const start = Date.now();
+
+    try {
+      onRefresh?.();
+    } catch (err) {
+      console.error("Refresh failed:", err);
+    } finally {
+      const elapsed = Date.now() - start;
+      const delay = Math.max(0, 500 - elapsed); // 至少显示 500ms
+      setTimeout(() => setIsRefreshing(false), delay);
+    }
+  };
+  const isLoading = loading || isRefreshing;
 
   return (
     <Tabs
       defaultValue="outline"
-      className="flex w-full flex-col justify-start gap-6"
+      className="flex w-full flex-col justify-start gap-2"
     >
       <div className="flex items-center justify-between px-4 lg:px-6">
+        {/* Mobile View Selector */}
         <Label htmlFor="view-selector" className="sr-only">
           View
         </Label>
         <Select defaultValue="outline">
-          <SelectTrigger
-            className="@4xl/main:hidden flex w-fit"
-            id="view-selector"
-          >
+          <SelectTrigger id="view-selector" className="flex w-fit lg:hidden">
             <SelectValue placeholder="Select a view" />
           </SelectTrigger>
           <SelectContent>
@@ -427,36 +447,51 @@ export function DataTable({
             <SelectItem value="focus-documents">Focus Documents</SelectItem>
           </SelectContent>
         </Select>
-        <TabsList className="@4xl/main:flex hidden">
+
+        {/* Desktop Tabs View */}
+        <TabsList className="hidden lg:flex space-x-2">
           <TabsTrigger value="outline">Outline</TabsTrigger>
-          <TabsTrigger value="past-performance" className="gap-1">
-            Past Performance{" "}
+
+          <TabsTrigger
+            value="past-performance"
+            className="flex items-center gap-1"
+          >
+            Past Performance
             <Badge
               variant="secondary"
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-muted-foreground/30"
+              className="h-5 w-5 flex items-center justify-center rounded-full bg-muted-foreground/20 text-xs"
             >
               3
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="key-personnel" className="gap-1">
-            Key Personnel{" "}
+
+          <TabsTrigger
+            value="key-personnel"
+            className="flex items-center gap-1"
+          >
+            Key Personnel
             <Badge
               variant="secondary"
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-muted-foreground/30"
+              className="h-5 w-5 flex items-center justify-center rounded-full bg-muted-foreground/20 text-xs"
             >
               2
             </Badge>
           </TabsTrigger>
+
           <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
         </TabsList>
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <ColumnsIcon />
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1 px-2.5 py-1.5 hover:bg-accent hover:text-accent-foreground"
+              >
+                <ColumnsIcon className="h-4 w-4" />
                 <span className="hidden lg:inline">Customize Columns</span>
                 <span className="lg:hidden">Columns</span>
-                <ChevronDownIcon />
+                <ChevronDownIcon className="h-4 w-4 ml-1" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -467,25 +502,45 @@ export function DataTable({
                     typeof column.accessorFn !== "undefined" &&
                     column.getCanHide()
                 )
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    className="capitalize hover:bg-muted/60 focus:bg-muted"
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
+                    }
+                  >
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm">
-            <PlusIcon />
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-1 px-2.5 py-1.5 hover:bg-accent hover:text-accent-foreground"
+          >
+            <PlusIcon className="h-4 w-4" />
             <span className="hidden lg:inline">Add Section</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshClick}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <RefreshCw className="mr-1 h-4 w-4 animate-spin" />
+                Refresh
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-1 h-4 w-4" />
+                Refresh
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -621,6 +676,8 @@ export function DataTable({
           </div>
         </div>
       </TabsContent>
+
+      {/* other */}
       <TabsContent
         value="past-performance"
         className="flex flex-col px-4 lg:px-6"

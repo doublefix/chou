@@ -70,6 +70,14 @@ export default function Page() {
     setContinueTokens([]);
   };
 
+  const handleRefresh = async () => {
+    try {
+      await refetch();
+    } catch (err) {
+      console.error("Failed to refresh data", err);
+    }
+  };
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
@@ -85,6 +93,7 @@ export default function Page() {
             hasNextPage={!!queryData?.paginatedNodes?.continueToken}
             hasPrevPage={currentPageIndex > 0}
             loading={!isMounted || loading} // Include !isMounted in loading state
+            onRefresh={handleRefresh}
           />
         </div>
       </div>
