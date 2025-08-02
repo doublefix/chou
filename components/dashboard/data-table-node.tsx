@@ -199,28 +199,68 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "cpu",
     header: "CPU",
-    cell: ({ row }) => (
-      <div className="text-right">{row.original.cpu}</div>
-    ),
+    cell: ({ row }) => <div className="text-right">{row.original.cpu}</div>,
   },
   {
     accessorKey: "memory",
     header: "Memory",
-    cell: ({ row }) => (
-      <div className="text-right">{row.original.memory}</div>
-    ),
+    cell: ({ row }) => <div className="text-right">{row.original.memory}</div>,
   },
+  // 新增架构字段
   {
-    accessorKey: "gpu",
-    header: "GPU",
+    accessorKey: "arch",
+    header: "Arch",
     cell: ({ row }) => (
-      <div className="text-right">{row.original.gpu}</div>
+      <Badge variant="outline" className="px-1.5">
+        {row.original.arch}
+      </Badge>
     ),
+    size: 80, // 固定列宽
+  },
+  // 新增角色字段
+  {
+    accessorKey: "role",
+    header: "Role",
+    cell: ({ row }) => (
+      <div className="w-24 truncate">
+        {row.original.role || (
+          <span className="text-muted-foreground">None</span>
+        )}
+      </div>
+    ),
+    size: 100,
   },
   {
     accessorKey: "ip",
-    header: "IP",
-    cell: ({ row }) => row.original.ip,
+    header: "IP Address",
+    cell: ({ row }) => <div className="w-24 truncate">{row.original.ip}</div>,
+  },
+  {
+    accessorKey: "os",
+    header: "OS",
+    cell: ({ row }) => (
+      <div className="w-20 truncate">
+        {row.original.os.split(" ")[0]} {/* 只显示操作系统名称 */}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "runtime",
+    header: "Runtime",
+    cell: ({ row }) => (
+      <div className="w-20 truncate">
+        {row.original.runtime.replace("containerd://", "")}
+      </div>
+    ),
+    size: 120,
+  },
+  {
+    accessorKey: "age",
+    header: "Created",
+    cell: ({ row }) => {
+      const date = new Date(row.original.age);
+      return <div className="w-24 text-sm">{date.toLocaleDateString()}</div>;
+    },
   },
   {
     id: "actions",
@@ -281,11 +321,11 @@ export function DataTable({
 
   const [data, setData] = React.useState<z.infer<typeof schema>[]>([]); // 显式类型 + 空数组初始值
 
-React.useEffect(() => {
-  if (initialData && initialData.length > 0) {
-    setData(initialData); // 父组件数据更新时同步到 state
-  }
-}, [initialData]);
+  React.useEffect(() => {
+    if (initialData && initialData.length > 0) {
+      setData(initialData); // 父组件数据更新时同步到 state
+    }
+  }, [initialData]);
 
   console.log("Initial data:", data); // 添加这行调试
 
@@ -618,9 +658,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
       <SheetContent side="right" className="flex flex-col">
         <SheetHeader className="gap-1">
           <SheetTitle>{item.name}</SheetTitle>
-          <SheetDescription>
-            Node details and specifications
-          </SheetDescription>
+          <SheetDescription>Node details and specifications</SheetDescription>
         </SheetHeader>
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4 text-sm">
           <form className="flex flex-col gap-4">
@@ -628,7 +666,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
               <Label htmlFor="name">Name</Label>
               <Input id="name" defaultValue={item.name} />
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-3">
                 <Label htmlFor="status">Status</Label>
