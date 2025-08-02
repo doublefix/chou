@@ -317,17 +317,13 @@ export function DataTable({
 }: {
   data: z.infer<typeof schema>[];
 }) {
-  console.log("Initial data 1:", initialData); // 添加这行调试
-
-  const [data, setData] = React.useState<z.infer<typeof schema>[]>([]); // 显式类型 + 空数组初始值
+  const [data, setData] = React.useState<z.infer<typeof schema>[]>([]);
 
   React.useEffect(() => {
     if (initialData && initialData.length > 0) {
       setData(initialData); // 父组件数据更新时同步到 state
     }
   }, [initialData]);
-
-  console.log("Initial data:", data); // 添加这行调试
 
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
@@ -558,10 +554,6 @@ export function DataTable({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
-            </div>
             <div className="ml-auto flex items-center gap-2 lg:ml-0">
               <Button
                 variant="outline"
@@ -591,16 +583,6 @@ export function DataTable({
               >
                 <span className="sr-only">Go to next page</span>
                 <ChevronRightIcon />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <ChevronsRightIcon />
               </Button>
             </div>
           </div>
