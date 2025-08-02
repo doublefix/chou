@@ -314,8 +314,22 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
 
 export function DataTable({
   data: initialData,
+  onNextPage,
+  onPrevPage,
+  onFirstPage,
+  onPageSizeChange,
+  hasNextPage,
+  hasPrevPage,
+  loading,
 }: {
   data: z.infer<typeof schema>[];
+  onNextPage: () => void;
+  onPrevPage: () => void;
+  onFirstPage: () => void;
+  onPageSizeChange: (size: number) => void;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  loading: boolean;
 }) {
   const [data, setData] = React.useState<z.infer<typeof schema>[]>([]);
 
@@ -537,7 +551,9 @@ export function DataTable({
               <Select
                 value={`${table.getState().pagination.pageSize}`}
                 onValueChange={(value) => {
-                  table.setPageSize(Number(value));
+                  const newSize = Number(value);
+                  table.setPageSize(newSize);
+                  onPageSizeChange(newSize);
                 }}
               >
                 <SelectTrigger className="w-20" id="rows-per-page">
@@ -546,7 +562,7 @@ export function DataTable({
                   />
                 </SelectTrigger>
                 <SelectContent side="top">
-                  {[1, 2, 10, 20, 30, 40, 50].map((pageSize) => (
+                  {[1, 2, 3, 5, 10, 20, 30, 40, 50].map((pageSize) => (
                     <SelectItem key={pageSize} value={`${pageSize}`}>
                       {pageSize}
                     </SelectItem>
@@ -558,8 +574,11 @@ export function DataTable({
               <Button
                 variant="outline"
                 className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() => {
+                  onFirstPage();
+                  table.setPageIndex(0);
+                }}
+                disabled={!hasPrevPage || loading}
               >
                 <span className="sr-only">Go to first page</span>
                 <ChevronsLeftIcon />
@@ -568,8 +587,11 @@ export function DataTable({
                 variant="outline"
                 className="size-8"
                 size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                onClick={() => {
+                  onPrevPage();
+                  table.previousPage();
+                }}
+                disabled={!hasPrevPage || loading}
               >
                 <span className="sr-only">Go to previous page</span>
                 <ChevronLeftIcon />
@@ -578,8 +600,11 @@ export function DataTable({
                 variant="outline"
                 className="size-8"
                 size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
+                onClick={() => {
+                  onNextPage();
+                  table.nextPage();
+                }}
+                disabled={!hasNextPage || loading}
               >
                 <span className="sr-only">Go to next page</span>
                 <ChevronRightIcon />
