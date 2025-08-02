@@ -47,15 +47,14 @@ import {
   MoreVerticalIcon,
   PlusIcon,
 } from "lucide-react";
+import { DataTableSkeleton } from "@/components/dashboard/data-table-node-skeleton";
 
 import { z } from "zod";
 
 import { useIsMobile } from "@/components/ui/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  ChartConfig,
-} from "@/components/dashboard/chart";
+import { ChartConfig } from "@/components/dashboard/chart";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -310,7 +309,7 @@ export function DataTable({
   onPrevPage,
   onFirstPage,
   onPageSizeChange,
-  pageSize: parentPageSize, // 接收父组件的pageSize
+  pageSize: parentPageSize,
   hasNextPage,
   hasPrevPage,
   loading,
@@ -320,19 +319,12 @@ export function DataTable({
   onPrevPage: () => void;
   onFirstPage: () => void;
   onPageSizeChange: (size: number) => void;
-  pageSize: number; // 新增props
+  pageSize: number;
   hasNextPage: boolean;
   hasPrevPage: boolean;
   loading: boolean;
 }) {
   const [data, setData] = React.useState<z.infer<typeof schema>[]>([]);
-
-  React.useEffect(() => {
-    if (initialData && initialData.length > 0) {
-      setData(initialData); // 父组件数据更新时同步到 state
-    }
-  }, [initialData]);
-
   const [rowSelection, setRowSelection] = React.useState({});
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -344,6 +336,13 @@ export function DataTable({
     pageIndex: 0,
     pageSize: parentPageSize,
   });
+  
+  React.useEffect(() => {
+    if (initialData && initialData.length > 0) {
+      setData(initialData); // 父组件数据更新时同步到 state
+    }
+  }, [initialData]);
+
   const sortableId = React.useId();
   const sensors = useSensors(
     useSensor(MouseSensor, {}),
@@ -509,7 +508,9 @@ export function DataTable({
                 ))}
               </TableHeader>
               <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
+                {loading ? (
+                  <DataTableSkeleton pageSize={parentPageSize} />
+                ) : table.getRowModel().rows?.length ? (
                   <SortableContext
                     items={dataIds}
                     strategy={verticalListSortingStrategy}
