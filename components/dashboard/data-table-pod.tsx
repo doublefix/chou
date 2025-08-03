@@ -339,65 +339,67 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
 
   return (
     <>
+      {/* 主行样式优化 */}
       <TableRow
         data-state={row.getIsSelected() && "selected"}
         data-dragging={isDragging}
         ref={setNodeRef}
-        className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+        className="group relative z-0 bg-background data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
         style={{
           transform: CSS.Transform.toString(transform),
           transition: transition,
         }}
       >
         {row.getVisibleCells().map((cell) => (
-          <TableCell key={cell.id}>
+          <TableCell key={cell.id} className="py-3">
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </TableCell>
         ))}
       </TableRow>
+
+      {/* 子项样式优化 */}
       {row.getIsExpanded() && row.original.subItems && (
-        <TableRow className="bg-muted/30">
-          <TableCell colSpan={columns.length}>
-            <div className="p-4">
-              <h4 className="mb-2 text-sm font-medium">Sub Items</h4>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Header</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Target</TableHead>
-                      <TableHead className="text-right">Limit</TableHead>
-                      <TableHead>Reviewer</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {row.original.subItems.map((subItem, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{subItem.header}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="px-1.5 text-muted-foreground">
-                            {subItem.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="flex gap-1 px-1.5 text-muted-foreground [&_svg]:size-3">
-                            {subItem.status === "Done" ? (
-                              <CheckCircle2Icon className="text-green-500 dark:text-green-400" />
-                            ) : (
-                              <LoaderIcon />
-                            )}
-                            {subItem.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">{subItem.target}</TableCell>
-                        <TableCell className="text-right">{subItem.limit}</TableCell>
-                        <TableCell>{subItem.reviewer}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+        <TableRow className="hover:bg-transparent">
+          <TableCell colSpan={columns.length} className="p-0">
+            <div className="pl-12 pr-4 py-4">
+              <div className="space-y-2">
+                {" "}
+                {/* 增加子项间距 */}
+                {row.original.subItems.map((subItem, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-4 px-3 py-2 text-sm border border-dashed border-muted-foreground/20 hover:border-muted-foreground/50 rounded-lg bg-muted/5 transition-colors"
+                    // 新增：虚线边框 + 圆角 + 背景色过渡
+                  >
+                    {/* 层级指示器 */}
+                    <div className="w-6 flex justify-center">
+                      <div className="size-1.5 rounded-full bg-muted-foreground/40" />
+                    </div>
+
+                    {/* 子项内容 */}
+                    <div className="w-32 truncate text-muted-foreground">
+                      {subItem.header}
+                    </div>
+                    <div className="flex-1">
+                      <Badge
+                        variant="outline"
+                        className="text-xs px-1.5 py-0.5 font-normal bg-muted/20 border-muted-foreground/10"
+                        // 微调 Badge 样式
+                      >
+                        {subItem.type}
+                      </Badge>
+                    </div>
+                    <div className="w-20 text-right text-muted-foreground/80">
+                      {subItem.target}
+                    </div>
+                    <div className="w-20 text-right text-muted-foreground/80">
+                      {subItem.limit}
+                    </div>
+                    <div className="w-28 truncate text-muted-foreground">
+                      {subItem.reviewer}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </TableCell>
