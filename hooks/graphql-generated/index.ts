@@ -106,6 +106,7 @@ export type Pod = {
   __typename?: 'Pod';
   age: Scalars['String']['output'];
   containers: Array<Container>;
+  id: Scalars['String']['output'];
   name: Scalars['String']['output'];
   namespace: Scalars['String']['output'];
   nodeName: Scalars['String']['output'];
@@ -115,12 +116,18 @@ export type Pod = {
   status: Scalars['String']['output'];
 };
 
+export type PodPage = {
+  __typename?: 'PodPage';
+  continueToken?: Maybe<Scalars['String']['output']>;
+  items: Array<Pod>;
+};
+
 export type Query = {
   __typename?: 'Query';
   node?: Maybe<Node>;
   paginatedNodes: NodePage;
   pod?: Maybe<Pod>;
-  pods: Array<Pod>;
+  pods: PodPage;
   todos: Array<Todo>;
 };
 
@@ -143,6 +150,8 @@ export type QueryPodArgs = {
 
 
 export type QueryPodsArgs = {
+  continueToken?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
   namespace?: InputMaybe<Scalars['String']['input']>;
 };
 

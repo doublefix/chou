@@ -2,12 +2,11 @@
 #
 # https://gqlgen.com/getting-started/
 
-
 type Query {
   todos: [Todo!]!
   paginatedNodes(limit: Int, continueToken: String): NodePage!
   node(name: String!): Node
-  pods(namespace: String): [Pod!]!
+  pods(namespace: String, limit: Int, continueToken: String): PodPage!
   pod(name: String!, namespace: String!): Pod
 }
 
@@ -39,24 +38,30 @@ type NodePage {
   continueToken: String
 }
 
-type Node {     
-  id: String!   
-  name: String!   
-  cpu: String!    
-  memory: String! 
-  gpu: String!    
-  status: String! 
-  arch: String!   
-  ip: String!     
-  role: String!   
-  os: String!     
-  kernel: String! 
+type Node {
+  id: String!
+  name: String!
+  cpu: String!
+  memory: String!
+  gpu: String!
+  status: String!
+  arch: String!
+  ip: String!
+  role: String!
+  os: String!
+  kernel: String!
   runtime: String!
   kubelet: String!
-  age: String!    
+  age: String!
+}
+
+type PodPage {
+  items: [Pod!]!
+  continueToken: String
 }
 
 type Pod {
+  id: String!
   name: String!
   namespace: String!
   status: String!
