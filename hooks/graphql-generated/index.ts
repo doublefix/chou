@@ -177,6 +177,15 @@ export type GetNodesQueryVariables = Exact<{
 
 export type GetNodesQuery = { __typename?: 'Query', paginatedNodes: { __typename?: 'NodePage', continueToken?: string | null, items: Array<{ __typename?: 'Node', id: string, name: string, cpu: string, memory: string, gpu: string, status: string, arch: string, ip: string, role: string, os: string, kernel: string, runtime: string, kubelet: string, age: string }> } };
 
+export type GetPodsQueryVariables = Exact<{
+  namespace?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  continueToken?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetPodsQuery = { __typename?: 'Query', pods: { __typename?: 'PodPage', continueToken?: string | null, items: Array<{ __typename?: 'Pod', id: string, name: string, namespace: string, status: string, nodeName: string, podIP?: string | null, restarts: number, age: string, startTime: string, containers: Array<{ __typename?: 'Container', name: string, image: string, ready: boolean, restartCount: number }> }> } };
+
 
 export const GetNodesDocument = gql`
     query GetNodes($limit: Int, $continueToken: String) {
@@ -235,3 +244,62 @@ export type GetNodesQueryHookResult = ReturnType<typeof useGetNodesQuery>;
 export type GetNodesLazyQueryHookResult = ReturnType<typeof useGetNodesLazyQuery>;
 export type GetNodesSuspenseQueryHookResult = ReturnType<typeof useGetNodesSuspenseQuery>;
 export type GetNodesQueryResult = Apollo.QueryResult<GetNodesQuery, GetNodesQueryVariables>;
+export const GetPodsDocument = gql`
+    query GetPods($namespace: String, $limit: Int, $continueToken: String) {
+  pods(namespace: $namespace, limit: $limit, continueToken: $continueToken) {
+    items {
+      id
+      name
+      namespace
+      status
+      nodeName
+      podIP
+      restarts
+      age
+      startTime
+      containers {
+        name
+        image
+        ready
+        restartCount
+      }
+    }
+    continueToken
+  }
+}
+    `;
+
+/**
+ * __useGetPodsQuery__
+ *
+ * To run a query within a React component, call `useGetPodsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPodsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPodsQuery({
+ *   variables: {
+ *      namespace: // value for 'namespace'
+ *      limit: // value for 'limit'
+ *      continueToken: // value for 'continueToken'
+ *   },
+ * });
+ */
+export function useGetPodsQuery(baseOptions?: Apollo.QueryHookOptions<GetPodsQuery, GetPodsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPodsQuery, GetPodsQueryVariables>(GetPodsDocument, options);
+      }
+export function useGetPodsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPodsQuery, GetPodsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPodsQuery, GetPodsQueryVariables>(GetPodsDocument, options);
+        }
+export function useGetPodsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetPodsQuery, GetPodsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPodsQuery, GetPodsQueryVariables>(GetPodsDocument, options);
+        }
+export type GetPodsQueryHookResult = ReturnType<typeof useGetPodsQuery>;
+export type GetPodsLazyQueryHookResult = ReturnType<typeof useGetPodsLazyQuery>;
+export type GetPodsSuspenseQueryHookResult = ReturnType<typeof useGetPodsSuspenseQuery>;
+export type GetPodsQueryResult = Apollo.QueryResult<GetPodsQuery, GetPodsQueryVariables>;

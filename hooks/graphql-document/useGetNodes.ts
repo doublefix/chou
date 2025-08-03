@@ -23,3 +23,28 @@ export const GET_NODES = gql`
     }
   }
 `;
+
+export const GET_PODS = gql`
+  query GetPods($namespace: String, $limit: Int, $continueToken: String) {
+    pods(namespace: $namespace, limit: $limit, continueToken: $continueToken) {
+      items {
+        id
+        name
+        namespace
+        status
+        nodeName
+        podIP
+        restarts
+        age
+        startTime
+        containers {
+          name
+          image
+          ready
+          restartCount
+        }
+      }
+      continueToken
+    }
+  }
+`;
