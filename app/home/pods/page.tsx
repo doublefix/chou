@@ -10,7 +10,7 @@ export default function Page() {
   const [remotePods, setRemotePods] = useState<any[]>([]);
   const [continueTokens, setContinueTokens] = useState<string[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const [isMounted, setIsMounted] = useState(false);
   const namespace = "kube-system"; // Hardcoded namespace as requested
 
