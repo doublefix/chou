@@ -314,15 +314,25 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
                       <div className="size-1.5 rounded-full bg-muted-foreground/40" />
                     </div>
 
-                    {/* Container content */}
-                    <div className="w-32 truncate text-muted-foreground">
+                    {/* Container content - adjusted widths */}
+                    <div className="w-48 truncate text-muted-foreground">
+                      {" "}
+                      {/* Increased from w-32 */}
                       {container.name}
                     </div>
-                    <div className="flex-1 truncate">{container.image}</div>
-                    <div className="w-20 text-right text-muted-foreground/80">
+                    <div className="flex-1 min-w-[200px] truncate">
+                      {" "}
+                      {/* Added min-width */}
+                      {container.image}
+                    </div>
+                    <div className="w-24 text-right text-muted-foreground/80">
+                      {" "}
+                      {/* Slightly wider */}
                       {container.ready ? "Ready" : "Not Ready"}
                     </div>
-                    <div className="w-20 text-right text-muted-foreground/80">
+                    <div className="w-24 text-right text-muted-foreground/80">
+                      {" "}
+                      {/* Slightly wider */}
                       {container.restartCount}
                     </div>
                   </div>
