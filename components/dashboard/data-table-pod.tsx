@@ -96,6 +96,9 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Terminal, FileText } from "lucide-react";
+
 export const schema = z.object({
   id: z.string(),
   name: z.string(),
@@ -314,26 +317,55 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
                       <div className="size-1.5 rounded-full bg-muted-foreground/40" />
                     </div>
 
-                    {/* Container content - adjusted widths */}
+                    {/* Container name */}
                     <div className="w-48 truncate text-muted-foreground">
-                      {" "}
-                      {/* Increased from w-32 */}
                       {container.name}
                     </div>
-                    <div className="flex-1 min-w-[200px] truncate">
-                      {" "}
-                      {/* Added min-width */}
+
+                    {/* Container image */}
+                    <div className="flex-1 min-w-[200px] truncate text-muted-foreground/80">
                       {container.image}
                     </div>
+
+                    {/* Ready status */}
                     <div className="w-24 text-right text-muted-foreground/80">
-                      {" "}
-                      {/* Slightly wider */}
                       {container.ready ? "Ready" : "Not Ready"}
                     </div>
+
+                    {/* Restart count */}
                     <div className="w-24 text-right text-muted-foreground/80">
-                      {" "}
-                      {/* Slightly wider */}
                       {container.restartCount}
+                    </div>
+
+                    {/* ➕ Action buttons */}
+                    <div className="flex items-center gap-2 justify-end w-32">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                            >
+                              <FileText className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>查看日志</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                            >
+                              <Terminal className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>进入容器</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 ))}
