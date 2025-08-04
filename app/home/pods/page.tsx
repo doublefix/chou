@@ -12,7 +12,7 @@ export default function Page() {
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [isMounted, setIsMounted] = useState(false);
-  const namespace = "kube-system"; // Hardcoded namespace as requested
+  const namespace = "s3-csi"; // Hardcoded namespace as requested
 
   const {
     data: queryData,

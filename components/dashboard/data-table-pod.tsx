@@ -46,6 +46,7 @@ import {
   LoaderIcon,
   MoreVerticalIcon,
   PlusIcon,
+  ChevronUpIcon,
 } from "lucide-react";
 import { DataTableSkeleton } from "@/components/dashboard/data-table-pod-skeleton";
 
@@ -135,28 +136,203 @@ function DragHandle({ id }: { id: string }) {
   );
 }
 
+const columns: ColumnDef<z.infer<typeof schema>>[] = [
+  {
+    id: "drag",
+    header: () => null,
+    cell: ({ row }) => <DragHandle id={row.original.id} />,
+  },
+  {
+    id: "select",
+    header: ({ table }) => (
+      <div className="flex items-center justify-center">
+        <Checkbox
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div className="flex items-center justify-center">
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "name",
+    header: "Name",
+    cell: ({ row }) => {
+      return <TableCellViewer item={row.original} />;
+    },
+    enableHiding: false,
+  },
+  {
+    accessorKey: "namespace",
+    header: "Namespace",
+    cell: ({ row }) => (
+      <Badge variant="outline" className="px-1.5">
+        {row.original.namespace}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => (
+      <Badge
+        variant="outline"
+        className="flex gap-1 px-1.5 text-muted-foreground [&_svg]:size-3"
+      >
+        {row.original.status === "Running" ? (
+          <CheckCircle2Icon className="text-green-500 dark:text-green-400" />
+        ) : (
+          <LoaderIcon />
+        )}
+        {row.original.status}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "nodeName",
+    header: "Node",
+    cell: ({ row }) => (
+      <div className="w-24 truncate">{row.original.nodeName}</div>
+    ),
+  },
+  {
+    accessorKey: "podIP",
+    header: "Pod IP",
+    cell: ({ row }) => (
+      <div className="w-24 truncate">{row.original.podIP}</div>
+    ),
+  },
+  {
+    accessorKey: "restarts",
+    header: "Restarts",
+    cell: ({ row }) => (
+      <div className="text-right">{row.original.restarts}</div>
+    ),
+  },
+  {
+    accessorKey: "age",
+    header: "Age",
+    cell: ({ row }) => {
+      const date = new Date(row.original.startTime);
+      return <div className="w-24 text-sm">{date.toLocaleDateString()}</div>;
+    },
+  },
+  {
+    id: "actions",
+    cell: () => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+            size="icon"
+          >
+            <MoreVerticalIcon />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-32">
+          <DropdownMenuItem>Edit</DropdownMenuItem>
+          <DropdownMenuItem>Make a copy</DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>Delete</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "expander",
+    header: () => null,
+    cell: ({ row }) => {
+      return row.original.containers.length > 0 ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          onClick={() => row.toggleExpanded()}
+        >
+          {row.getIsExpanded() ? (
+            <ChevronUpIcon className="size-4" />
+          ) : (
+            <ChevronDownIcon className="size-4" />
+          )}
+          <span className="sr-only">Toggle expand</span>
+        </Button>
+      ) : null;
+    },
+  },
+];
+
 function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   });
 
   return (
-    <TableRow
-      data-state={row.getIsSelected() && "selected"}
-      data-dragging={isDragging}
-      ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition,
-      }}
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-    </TableRow>
+    <>
+      {/* Main row */}
+      <TableRow
+        data-state={row.getIsSelected() && "selected"}
+        data-dragging={isDragging}
+        ref={setNodeRef}
+        className="group relative z-0 bg-background data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+        style={{
+          transform: CSS.Transform.toString(transform),
+          transition: transition,
+        }}
+      >
+        {row.getVisibleCells().map((cell) => (
+          <TableCell key={cell.id} className="py-3">
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </TableCell>
+        ))}
+      </TableRow>
+
+      {/* Expanded content for containers */}
+      {row.getIsExpanded() && row.original.containers.length > 0 && (
+        <TableRow className="hover:bg-transparent">
+          <TableCell colSpan={columns.length} className="p-0">
+            <div className="pl-12 pr-4 py-6">
+              <div className="space-y-4">
+                {row.original.containers.map((container, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-4 px-3 py-2 text-sm border border-dashed border-muted-foreground/20 hover:border-muted-foreground/50 rounded-lg bg-muted/5 transition-colors"
+                  >
+                    {/* Container indicator */}
+                    <div className="w-6 flex justify-center">
+                      <div className="size-1.5 rounded-full bg-muted-foreground/40" />
+                    </div>
+
+                    {/* Container content */}
+                    <div className="w-32 truncate text-muted-foreground">
+                      {container.name}
+                    </div>
+                    <div className="flex-1 truncate">{container.image}</div>
+                    <div className="w-20 text-right text-muted-foreground/80">
+                      {container.ready ? "Ready" : "Not Ready"}
+                    </div>
+                    <div className="w-20 text-right text-muted-foreground/80">
+                      {container.restartCount}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </TableCell>
+        </TableRow>
+      )}
+    </>
   );
 }
 
@@ -195,6 +371,7 @@ export function DataTable({
     pageIndex: 0,
     pageSize: parentPageSize,
   });
+  const [expanded, setExpanded] = React.useState({});
   const [isInitialLoad, setIsInitialLoad] = React.useState(true);
 
   React.useEffect(() => {
@@ -218,129 +395,6 @@ export function DataTable({
     [data]
   );
 
-  const columns = React.useMemo<ColumnDef<z.infer<typeof schema>>[]>(
-    () => [
-      {
-        id: "drag",
-        header: () => null,
-        cell: ({ row }) => <DragHandle id={row.original.id} />,
-      },
-      {
-        id: "select",
-        header: ({ table }) => (
-          <div className="flex items-center justify-center">
-            <Checkbox
-              onCheckedChange={(value) =>
-                table.toggleAllPageRowsSelected(!!value)
-              }
-              aria-label="Select all"
-            />
-          </div>
-        ),
-        cell: ({ row }) => (
-          <div className="flex items-center justify-center">
-            <Checkbox
-              checked={row.getIsSelected()}
-              onCheckedChange={(value) => row.toggleSelected(!!value)}
-              aria-label="Select row"
-            />
-          </div>
-        ),
-        enableSorting: false,
-        enableHiding: false,
-      },
-      {
-        accessorKey: "name",
-        header: "Name",
-        cell: ({ row }) => {
-          return <TableCellViewer item={row.original} />;
-        },
-        enableHiding: false,
-      },
-      {
-        accessorKey: "namespace",
-        header: "Namespace",
-        cell: ({ row }) => (
-          <Badge variant="outline" className="px-1.5">
-            {row.original.namespace}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-          <Badge
-            variant="outline"
-            className="flex gap-1 px-1.5 text-muted-foreground [&_svg]:size-3"
-          >
-            {row.original.status === "Running" ? (
-              <CheckCircle2Icon className="text-green-500 dark:text-green-400" />
-            ) : (
-              <LoaderIcon />
-            )}
-            {row.original.status}
-          </Badge>
-        ),
-      },
-      {
-        accessorKey: "nodeName",
-        header: "Node",
-        cell: ({ row }) => (
-          <div className="w-24 truncate">{row.original.nodeName}</div>
-        ),
-      },
-      {
-        accessorKey: "podIP",
-        header: "Pod IP",
-        cell: ({ row }) => (
-          <div className="w-24 truncate">{row.original.podIP}</div>
-        ),
-      },
-      {
-        accessorKey: "restarts",
-        header: "Restarts",
-        cell: ({ row }) => (
-          <div className="text-right">{row.original.restarts}</div>
-        ),
-      },
-      {
-        accessorKey: "age",
-        header: "Age",
-        cell: ({ row }) => {
-          const date = new Date(row.original.startTime);
-          return (
-            <div className="w-24 text-sm">{date.toLocaleDateString()}</div>
-          );
-        },
-      },
-      {
-        id: "actions",
-        cell: () => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-                size="icon"
-              >
-                <MoreVerticalIcon />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-              <DropdownMenuItem>Edit</DropdownMenuItem>
-              <DropdownMenuItem>Make a copy</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Delete</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ),
-      },
-    ],
-    []
-  );
-
   const table = useReactTable({
     data,
     columns,
@@ -350,6 +404,7 @@ export function DataTable({
       rowSelection,
       columnFilters,
       pagination,
+      expanded,
     },
     getRowId: (row) => row.id.toString(),
     enableRowSelection: true,
@@ -358,6 +413,7 @@ export function DataTable({
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
+    onExpandedChange: setExpanded,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
