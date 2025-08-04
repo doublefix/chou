@@ -96,8 +96,14 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Terminal, FileText } from "lucide-react";
+import { CheckIcon, ClipboardCopyIcon } from "lucide-react";
 
 export const schema = z.object({
   id: z.string(),
@@ -281,6 +287,7 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   });
+  const [copied, setCopied] = React.useState(false);
 
   return (
     <>
@@ -324,9 +331,102 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
                     </div>
 
                     {/* Container image */}
-                    <div className="flex-1 min-w-[200px] truncate text-muted-foreground/80">
-                      {container.image}
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className="flex-1 min-w-[200px] truncate text-muted-foreground/80 cursor-pointer hover:text-muted-foreground"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                if (navigator.clipboard) {
+                                  await navigator.clipboard.writeText(
+                                    container.imageId
+                                  );
+                                } else {
+                                  const textArea =
+                                    document.createElement("textarea");
+                                  textArea.value = container.imageId;
+                                  textArea.style.position = "fixed";
+                                  textArea.style.left = "-9999px";
+                                  document.body.appendChild(textArea);
+                                  textArea.focus();
+                                  textArea.select();
+                                  try {
+                                    document.execCommand?.("copy");
+                                  } catch (err) {
+                                    console.warn("Fallback copy failed", err);
+                                  }
+                                  document.body.removeChild(textArea);
+                                }
+                              } catch (err) {
+                                console.error("Failed to copy:", err);
+                              }
+                            }}
+                          >
+                            {container.image}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          className="max-w-[300px] p-2"
+                          side="top"
+                          align="start"
+                        >
+                          <div className="flex flex-col gap-1">
+                            <div className="text-sm font-medium">Image ID:</div>
+                            <div className="text-xs font-mono break-all mb-2">
+                              {container.imageId}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-xs border-foreground flex items-center gap-1 text-foreground"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  if (navigator.clipboard) {
+                                    await navigator.clipboard.writeText(
+                                      container.imageId
+                                    );
+                                  } else {
+                                    const textArea =
+                                      document.createElement("textarea");
+                                    textArea.value = container.imageId;
+                                    textArea.style.position = "fixed";
+                                    textArea.style.left = "-9999px";
+                                    document.body.appendChild(textArea);
+                                    textArea.focus();
+                                    textArea.select();
+                                    try {
+                                      document.execCommand?.("copy");
+                                    } catch (err) {
+                                      console.warn("Fallback copy failed", err);
+                                    }
+                                    document.body.removeChild(textArea);
+                                  }
+                                  setCopied(true);
+                                  setTimeout(() => setCopied(false), 2000);
+                                } catch (err) {
+                                  console.error("Failed to copy:", err);
+                                }
+                              }}
+                            >
+                              {copied ? (
+                                <>
+                                  <CheckIcon className="w-4 h-4" />
+                                  Copied
+                                </>
+                              ) : (
+                                <>
+                                  <ClipboardCopyIcon className="w-4 h-4" />
+                                  Copy Image ID
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
 
                     {/* Ready status */}
                     <div className="w-24 text-right text-muted-foreground/80">
