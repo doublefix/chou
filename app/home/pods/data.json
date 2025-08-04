@@ -23,6 +23,22 @@
         "target": "2",
         "limit": "1",
         "reviewer": "Eddie Lake"
+      },
+      {
+        "header": "Back Cover",
+        "type": "Cover Element",
+        "status": "In Process",
+        "target": "2",
+        "limit": "1",
+        "reviewer": "Eddie Lake"
+      },
+      {
+        "header": "Back Cover",
+        "type": "Cover Element",
+        "status": "In Process",
+        "target": "2",
+        "limit": "1",
+        "reviewer": "Eddie Lake"
       }
     ]
   },

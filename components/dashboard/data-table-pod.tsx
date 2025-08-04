@@ -361,8 +361,8 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
       {row.getIsExpanded() && row.original.subItems && (
         <TableRow className="hover:bg-transparent">
           <TableCell colSpan={columns.length} className="p-0">
-            <div className="pl-12 pr-4 py-4">
-              <div className="space-y-2">
+            <div className="pl-12 pr-4 py-6">
+              <div className="space-y-4">
                 {" "}
                 {/* 增加子项间距 */}
                 {row.original.subItems.map((subItem, index) => (
