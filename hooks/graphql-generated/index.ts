@@ -20,6 +20,7 @@ export type Scalars = {
 export type Container = {
   __typename?: 'Container';
   image: Scalars['String']['output'];
+  imageId: Scalars['String']['output'];
   name: Scalars['String']['output'];
   ready: Scalars['Boolean']['output'];
   restartCount: Scalars['Int']['output'];
@@ -184,7 +185,7 @@ export type GetPodsQueryVariables = Exact<{
 }>;
 
 
-export type GetPodsQuery = { __typename?: 'Query', pods: { __typename?: 'PodPage', continueToken?: string | null, items: Array<{ __typename?: 'Pod', id: string, name: string, namespace: string, status: string, nodeName: string, podIP?: string | null, restarts: number, age: string, startTime: string, containers: Array<{ __typename?: 'Container', name: string, image: string, ready: boolean, restartCount: number }> }> } };
+export type GetPodsQuery = { __typename?: 'Query', pods: { __typename?: 'PodPage', continueToken?: string | null, items: Array<{ __typename?: 'Pod', id: string, name: string, namespace: string, status: string, nodeName: string, podIP?: string | null, restarts: number, age: string, startTime: string, containers: Array<{ __typename?: 'Container', name: string, image: string, imageId: string, ready: boolean, restartCount: number }> }> } };
 
 
 export const GetNodesDocument = gql`
@@ -260,6 +261,7 @@ export const GetPodsDocument = gql`
       containers {
         name
         image
+        imageId
         ready
         restartCount
       }

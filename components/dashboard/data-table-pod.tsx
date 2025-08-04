@@ -113,6 +113,7 @@ export const schema = z.object({
     z.object({
       name: z.string(),
       image: z.string(),
+      imageId: z.string(),
       ready: z.boolean(),
       restartCount: z.number(),
     })

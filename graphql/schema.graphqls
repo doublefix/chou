@@ -76,6 +76,7 @@ type Pod {
 type Container {
   name: String!
   image: String!
+  imageId: String!
   ready: Boolean!
   restartCount: Int!
 }

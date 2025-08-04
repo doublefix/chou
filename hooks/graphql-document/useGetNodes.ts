@@ -40,6 +40,7 @@ export const GET_PODS = gql`
         containers {
           name
           image
+          imageId
           ready
           restartCount
         }
