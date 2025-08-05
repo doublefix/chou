@@ -18,7 +18,7 @@ export default function RootLayout({
       <AppSidebar />
       <SidebarInset>
         <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-grid   w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex items-center gap-4 px-4 relative">
+          {/* <div className="flex items-center gap-4 px-4 relative">
             <Search className="absolute left-6 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
@@ -27,7 +27,7 @@ export default function RootLayout({
               placeholder="Search models, datasets, users..."
               className="h-9 w-[360px] pl-10"
             />
-          </div>
+          </div> */}
           <div className="ml-auto px-3 gap-4 px-4 ">
             <NavActions />
           </div>

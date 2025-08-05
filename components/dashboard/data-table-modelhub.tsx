@@ -32,6 +32,7 @@ import {
   TrendingUpIcon,
   XIcon,
 } from "lucide-react";
+import { Search } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -303,7 +304,6 @@ export function DataTable({
           )}
         </div>
       </div>
-
       <Separator />
 
       {/* 类型筛选 */}
@@ -406,13 +406,13 @@ export function DataTable({
       <div className="flex-1">
         <Tabs
           defaultValue="outline"
-          className="flex w-full flex-col justify-start gap-6"
+          className="flex w-full flex-col justify-start gap-4"
         >
           <div className="flex items-center justify-between px-4 lg:px-6">
             <Label htmlFor="view-selector" className="sr-only">
               View
             </Label>
-            <Select defaultValue="outline">
+            {/* <Select defaultValue="outline">
               <SelectTrigger
                 className="@4xl/main:hidden flex w-fit"
                 id="view-selector"
@@ -427,7 +427,17 @@ export function DataTable({
                 <SelectItem value="key-personnel">Key Personnel</SelectItem>
                 <SelectItem value="focus-documents">Focus Documents</SelectItem>
               </SelectContent>
-            </Select>
+            </Select> */}
+            <div>
+              <Search className="absolute left-6 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                autoComplete="off"
+                spellCheck="false"
+                placeholder="Search models, datasets, users..."
+                className="h-9 w-[360px]"
+              />
+            </div>
             <TabsList className="@4xl/main:flex hidden">
               <TabsTrigger value="outline">Outline</TabsTrigger>
               <TabsTrigger value="past-performance" className="gap-1">
@@ -490,7 +500,6 @@ export function DataTable({
               </Button>
             </div>
           </div>
-
           {/* 活跃筛选器标签 */}
           {(filters.search ||
             filters.types.length > 0 ||
