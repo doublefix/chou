@@ -24,10 +24,13 @@ import {
   ChevronsLeftIcon,
   ChevronsRightIcon,
   ColumnsIcon,
+  FilterIcon,
   LoaderIcon,
   MoreVerticalIcon,
   PlusIcon,
+  SlidersHorizontalIcon,
   TrendingUpIcon,
+  XIcon,
 } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { toast } from "sonner";
@@ -79,6 +82,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const schema = z.object({
   id: z.number(),
@@ -89,6 +94,14 @@ export const schema = z.object({
   limit: z.string(),
   reviewer: z.string(),
 });
+
+// 筛选条件类型定义
+type FilterState = {
+  search: string;
+  types: string[];
+  statuses: string[];
+  reviewers: string[];
+};
 
 // 调整列定义 - 仅保留一个主要列用于渲染三行结构
 const columns: ColumnDef<z.infer<typeof schema>>[] = [
@@ -108,6 +121,7 @@ export function DataTable({
   data: z.infer<typeof schema>[];
 }) {
   const [data, setData] = React.useState(() => initialData);
+  const [filteredData, setFilteredData] = React.useState(() => initialData);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -119,8 +133,64 @@ export function DataTable({
     pageSize: 10,
   });
 
+  // 筛选状态管理
+  const [filters, setFilters] = React.useState<FilterState>({
+    search: "",
+    types: [],
+    statuses: [],
+    reviewers: [],
+  });
+
+  const isMobile = useIsMobile();
+
+  // 提取唯一的筛选选项
+  const uniqueTypes = Array.from(new Set(initialData.map((item) => item.type)));
+  const uniqueStatuses = Array.from(
+    new Set(initialData.map((item) => item.status))
+  );
+  const uniqueReviewers = Array.from(
+    new Set(initialData.map((item) => item.reviewer))
+  );
+
+  // 应用筛选
+  React.useEffect(() => {
+    let result = [...initialData];
+
+    // 搜索筛选
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(
+        (item) =>
+          item.header.toLowerCase().includes(searchLower) ||
+          item.type.toLowerCase().includes(searchLower) ||
+          item.reviewer.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // 类型筛选
+    if (filters.types.length > 0) {
+      result = result.filter((item) => filters.types.includes(item.type));
+    }
+
+    // 状态筛选
+    if (filters.statuses.length > 0) {
+      result = result.filter((item) => filters.statuses.includes(item.status));
+    }
+
+    // 审核人筛选
+    if (filters.reviewers.length > 0) {
+      result = result.filter((item) =>
+        filters.reviewers.includes(item.reviewer)
+      );
+    }
+
+    setFilteredData(result);
+    // 重置分页到第一页
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [filters, initialData]);
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: {
       sorting,
@@ -141,234 +211,518 @@ export function DataTable({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  return (
-    <Tabs
-      defaultValue="outline"
-      className="flex w-full flex-col justify-start gap-6"
-    >
-      <div className="flex items-center justify-between px-4 lg:px-6">
-        <Label htmlFor="view-selector" className="sr-only">
-          View
-        </Label>
-        <Select defaultValue="outline">
-          <SelectTrigger
-            className="@4xl/main:hidden flex w-fit"
-            id="view-selector"
-          >
-            <SelectValue placeholder="Select a view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="outline">Outline</SelectItem>
-            <SelectItem value="past-performance">Past Performance</SelectItem>
-            <SelectItem value="key-personnel">Key Personnel</SelectItem>
-            <SelectItem value="focus-documents">Focus Documents</SelectItem>
-          </SelectContent>
-        </Select>
-        <TabsList className="@4xl/main:flex hidden">
-          <TabsTrigger value="outline">Outline</TabsTrigger>
-          <TabsTrigger value="past-performance" className="gap-1">
-            Past Performance{" "}
-            <Badge
-              variant="secondary"
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-muted-foreground/30"
+  // 筛选器变更处理函数
+  const handleFilterChange = (key: keyof FilterState, value: any) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  // 切换类型筛选
+  const toggleTypeFilter = (type: string) => {
+    setFilters((prev) => {
+      const types = prev.types.includes(type)
+        ? prev.types.filter((t) => t !== type)
+        : [...prev.types, type];
+      return { ...prev, types };
+    });
+  };
+
+  // 切换状态筛选
+  const toggleStatusFilter = (status: string) => {
+    setFilters((prev) => {
+      const statuses = prev.statuses.includes(status)
+        ? prev.statuses.filter((s) => s !== status)
+        : [...prev.statuses, status];
+      return { ...prev, statuses };
+    });
+  };
+
+  // 切换审核人筛选
+  const toggleReviewerFilter = (reviewer: string) => {
+    setFilters((prev) => {
+      const reviewers = prev.reviewers.includes(reviewer)
+        ? prev.reviewers.filter((r) => r !== reviewer)
+        : [...prev.reviewers, reviewer];
+      return { ...prev, reviewers };
+    });
+  };
+
+  // 清除所有筛选
+  const clearAllFilters = () => {
+    setFilters({
+      search: "",
+      types: [],
+      statuses: [],
+      reviewers: [],
+    });
+  };
+
+  // 筛选器组件
+  const FilterPanel = () => (
+    <div className="flex flex-col gap-6 p-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Filters</h3>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={clearAllFilters}
+          disabled={
+            !filters.search &&
+            filters.types.length === 0 &&
+            filters.statuses.length === 0 &&
+            filters.reviewers.length === 0
+          }
+          className="h-8 gap-1 text-sm text-muted-foreground"
+        >
+          <XIcon className="h-4 w-4" />
+          Clear all
+        </Button>
+      </div>
+
+      {/* 搜索筛选 */}
+      <div className="space-y-2">
+        <Label htmlFor="search-filter">Search</Label>
+        <div className="relative">
+          <FilterIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="search-filter"
+            placeholder="Search by header, type..."
+            value={filters.search}
+            onChange={(e) => handleFilterChange("search", e.target.value)}
+            className="pl-8"
+          />
+          {filters.search && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1 h-6 w-6"
+              onClick={() => handleFilterChange("search", "")}
             >
-              3
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="key-personnel" className="gap-1">
-            Key Personnel{" "}
-            <Badge
-              variant="secondary"
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-muted-foreground/30"
-            >
-              2
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
-        </TabsList>
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <ColumnsIcon />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
-                <ChevronDownIcon />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {table
-                .getAllColumns()
-                .filter(
-                  (column) =>
-                    typeof column.accessorFn !== "undefined" &&
-                    column.getCanHide()
-                )
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" size="sm">
-            <PlusIcon />
-            <span className="hidden lg:inline">Add Section</span>
-          </Button>
+              <XIcon className="h-3 w-3" />
+              <span className="sr-only">Clear search</span>
+            </Button>
+          )}
         </div>
       </div>
-      <TabsContent
-        value="outline"
-        className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
-      >
-        <div className="overflow-hidden rounded-lg border">
-          <Table>
-            {/* 保留表头结构但移除字段文本 */}
-            <TableHeader className="sticky top-0 z-10 bg-muted h-12">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
-                      {/* 表头内容为空但保留结构 */}
-                      <div className="h-full w-full"></div>
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className="h-auto" // 自动高度适应内容
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="p-0">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+
+      <Separator />
+
+      {/* 类型筛选 */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label>Type</Label>
+          <Badge variant="outline" className="h-6 px-1.5 text-xs">
+            {filters.types.length}
+          </Badge>
         </div>
-        <div className="flex items-center justify-between px-4">
-          <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-            {table.getFilteredRowModel().rows.length} row(s) total.
-          </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Rows per page
+        <div className="space-y-2">
+          {uniqueTypes.map((type) => (
+            <div key={type} className="flex items-center space-x-2">
+              <Checkbox
+                id={`type-${type}`}
+                checked={filters.types.includes(type)}
+                onCheckedChange={() => toggleTypeFilter(type)}
+              />
+              <Label
+                htmlFor={`type-${type}`}
+                className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {type}
               </Label>
-              <Select
-                value={`${table.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  table.setPageSize(Number(value));
-                }}
-              >
-                <SelectTrigger className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={table.getState().pagination.pageSize}
-                  />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount()}
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* 状态筛选 */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label>Status</Label>
+          <Badge variant="outline" className="h-6 px-1.5 text-xs">
+            {filters.statuses.length}
+          </Badge>
+        </div>
+        <div className="space-y-2">
+          {uniqueStatuses.map((status) => (
+            <div key={status} className="flex items-center space-x-2">
+              <Checkbox
+                id={`status-${status}`}
+                checked={filters.statuses.includes(status)}
+                onCheckedChange={() => toggleStatusFilter(status)}
+              />
+              <Label
+                htmlFor={`status-${status}`}
+                className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {status}
+              </Label>
             </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
+          ))}
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* 审核人筛选 */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label>Reviewer</Label>
+          <Badge variant="outline" className="h-6 px-1.5 text-xs">
+            {filters.reviewers.length}
+          </Badge>
+        </div>
+        <div className="space-y-2">
+          {uniqueReviewers.map((reviewer) => (
+            <div key={reviewer} className="flex items-center space-x-2">
+              <Checkbox
+                id={`reviewer-${reviewer}`}
+                checked={filters.reviewers.includes(reviewer)}
+                onCheckedChange={() => toggleReviewerFilter(reviewer)}
+              />
+              <Label
+                htmlFor={`reviewer-${reviewer}`}
+                className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                <span className="sr-only">Go to first page</span>
-                <ChevronsLeftIcon />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
+                {reviewer}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex flex-col lg:flex-row w-full">
+      {/* 桌面端筛选面板 */}
+      <div className="hidden lg:block w-96 ml-4 rounded-lg shrink-0">
+        <ScrollArea className="h-[calc(100vh-4rem)]">
+          <FilterPanel />
+        </ScrollArea>
+      </div>
+
+      {/* 主表格区域 */}
+      <div className="flex-1">
+        <Tabs
+          defaultValue="outline"
+          className="flex w-full flex-col justify-start gap-6"
+        >
+          <div className="flex items-center justify-between px-4 lg:px-6">
+            <Label htmlFor="view-selector" className="sr-only">
+              View
+            </Label>
+            <Select defaultValue="outline">
+              <SelectTrigger
+                className="@4xl/main:hidden flex w-fit"
+                id="view-selector"
               >
-                <span className="sr-only">Go to previous page</span>
-                <ChevronLeftIcon />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to next page</span>
-                <ChevronRightIcon />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <ChevronsRightIcon />
+                <SelectValue placeholder="Select a view" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="outline">Outline</SelectItem>
+                <SelectItem value="past-performance">
+                  Past Performance
+                </SelectItem>
+                <SelectItem value="key-personnel">Key Personnel</SelectItem>
+                <SelectItem value="focus-documents">Focus Documents</SelectItem>
+              </SelectContent>
+            </Select>
+            <TabsList className="@4xl/main:flex hidden">
+              <TabsTrigger value="outline">Outline</TabsTrigger>
+              <TabsTrigger value="past-performance" className="gap-1">
+                Past Performance{" "}
+                <Badge
+                  variant="secondary"
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-muted-foreground/30"
+                >
+                  3
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="key-personnel" className="gap-1">
+                Key Personnel{" "}
+                <Badge
+                  variant="secondary"
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-muted-foreground/30"
+                >
+                  2
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
+            </TabsList>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <ColumnsIcon />
+                    <span className="hidden lg:inline">Customize Columns</span>
+                    <span className="lg:hidden">Columns</span>
+                    <ChevronDownIcon />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {table
+                    .getAllColumns()
+                    .filter(
+                      (column) =>
+                        typeof column.accessorFn !== "undefined" &&
+                        column.getCanHide()
+                    )
+                    .map((column) => {
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          className="capitalize"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) =>
+                            column.toggleVisibility(!!value)
+                          }
+                        >
+                          {column.id}
+                        </DropdownMenuCheckboxItem>
+                      );
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button variant="outline" size="sm">
+                <PlusIcon />
+                <span className="hidden lg:inline">Add Section</span>
               </Button>
             </div>
           </div>
-        </div>
-      </TabsContent>
-      <TabsContent
-        value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent
-        value="focus-documents"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-    </Tabs>
+
+          {/* 活跃筛选器标签 */}
+          {(filters.search ||
+            filters.types.length > 0 ||
+            filters.statuses.length > 0 ||
+            filters.reviewers.length > 0) && (
+            <div className="px-4 lg:px-6">
+              <div className="flex flex-wrap gap-2">
+                {filters.search && (
+                  <Badge
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    Search: {filters.search}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 p-0"
+                      onClick={() => handleFilterChange("search", "")}
+                    >
+                      <XIcon className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                )}
+
+                {filters.types.map((type) => (
+                  <Badge
+                    key={`badge-type-${type}`}
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    Type: {type}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 p-0"
+                      onClick={() => toggleTypeFilter(type)}
+                    >
+                      <XIcon className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+
+                {filters.statuses.map((status) => (
+                  <Badge
+                    key={`badge-status-${status}`}
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    Status: {status}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 p-0"
+                      onClick={() => toggleStatusFilter(status)}
+                    >
+                      <XIcon className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+
+                {filters.reviewers.map((reviewer) => (
+                  <Badge
+                    key={`badge-reviewer-${reviewer}`}
+                    variant="secondary"
+                    className="flex items-center gap-1"
+                  >
+                    Reviewer: {reviewer}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 p-0"
+                      onClick={() => toggleReviewerFilter(reviewer)}
+                    >
+                      <XIcon className="h-3 w-3" />
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <TabsContent
+            value="outline"
+            className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
+          >
+            <div className="overflow-hidden rounded-lg border">
+              <Table>
+                {/* 保留表头结构但移除字段文本 */}
+                <TableHeader className="sticky top-0 z-10 bg-muted h-12">
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id} colSpan={header.colSpan}>
+                          {/* 表头内容为空但保留结构 */}
+                          <div className="h-full w-full"></div>
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() && "selected"}
+                        className="h-auto" // 自动高度适应内容
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id} className="p-0">
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results match your filters.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex items-center justify-between px-4">
+              <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
+                {table.getFilteredRowModel().rows.length} row(s) total.
+              </div>
+              <div className="flex w-full items-center gap-8 lg:w-fit">
+                <div className="hidden items-center gap-2 lg:flex">
+                  <Label
+                    htmlFor="rows-per-page"
+                    className="text-sm font-medium"
+                  >
+                    Rows per page
+                  </Label>
+                  <Select
+                    value={`${table.getState().pagination.pageSize}`}
+                    onValueChange={(value) => {
+                      table.setPageSize(Number(value));
+                    }}
+                  >
+                    <SelectTrigger className="w-20" id="rows-per-page">
+                      <SelectValue
+                        placeholder={table.getState().pagination.pageSize}
+                      />
+                    </SelectTrigger>
+                    <SelectContent side="top">
+                      {[10, 20, 30, 40, 50].map((pageSize) => (
+                        <SelectItem key={pageSize} value={`${pageSize}`}>
+                          {pageSize}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex w-fit items-center justify-center text-sm font-medium">
+                  Page {table.getState().pagination.pageIndex + 1} of{" "}
+                  {table.getPageCount()}
+                </div>
+                <div className="ml-auto flex items-center gap-2 lg:ml-0">
+                  <Button
+                    variant="outline"
+                    className="hidden h-8 w-8 p-0 lg:flex"
+                    onClick={() => table.setPageIndex(0)}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    <span className="sr-only">Go to first page</span>
+                    <ChevronsLeftIcon />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="size-8"
+                    size="icon"
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    <span className="sr-only">Go to previous page</span>
+                    <ChevronLeftIcon />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="size-8"
+                    size="icon"
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    <span className="sr-only">Go to next page</span>
+                    <ChevronRightIcon />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="hidden size-8 lg:flex"
+                    size="icon"
+                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    <span className="sr-only">Go to last page</span>
+                    <ChevronsRightIcon />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          <TabsContent
+            value="past-performance"
+            className="flex flex-col px-4 lg:px-6"
+          >
+            <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+          </TabsContent>
+          <TabsContent
+            value="key-personnel"
+            className="flex flex-col px-4 lg:px-6"
+          >
+            <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+          </TabsContent>
+          <TabsContent
+            value="focus-documents"
+            className="flex flex-col px-4 lg:px-6"
+          >
+            <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
   );
 }
 
