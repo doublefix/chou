@@ -429,7 +429,6 @@ export function DataTable({
               </SelectContent>
             </Select> */}
             <div>
-              <Search className="absolute left-6 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
                 autoComplete="off"
