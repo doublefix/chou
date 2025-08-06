@@ -51,7 +51,7 @@ export function NavUser({
       <DropdownMenuTrigger asChild>
         <Avatar className="h-8 w-8 cursor-pointer">
           <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback>CH</AvatarFallback>
+          <AvatarFallback>ch</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 
