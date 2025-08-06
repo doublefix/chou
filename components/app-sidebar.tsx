@@ -26,6 +26,7 @@ import {
   SettingsIcon,
 } from "lucide-react";
 
+import Button from "@/components/ui/test/button";
 import { NavMain } from "@/components/nav-main";
 import { NavMainTop } from "@/components/nav-main-top";
 import { NavProjects } from "@/components/nav-projects";
@@ -42,6 +43,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { SidebarOptInForm } from "@/components/sidebar-opt-in-form";
 
 // This is sample data.
 const data = {
@@ -409,7 +411,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           />
         </SidebarContent>
         <SidebarFooter>
-          <NavUser user={data.user} />
+          {/* <NavUser user={data.user} /> */}
+          {/* <div className="p-1">
+            <SidebarOptInForm />
+          </div> */}
+          <div className="text-xs text-muted-foreground px-2 py-1">
+            v1.0.3 · Beta
+          </div>
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
