@@ -42,8 +42,13 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { SidebarOptInForm } from "@/components/sidebar-opt-in-form";
+
+import { IconInnerShadowTop } from "@tabler/icons-react";
 
 // This is sample data.
 const data = {
@@ -392,9 +397,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <>
       <Sidebar collapsible="icon" {...props}>
         <SidebarHeader className={showBorder ? "border-b" : ""}>
-          <TeamSwitcher teams={data.teams} />
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                className="data-[slot=sidebar-menu-button]:!p-1.5"
+              >
+                <a href="#">
+                  <IconInnerShadowTop className="!size-5" />
+                  <span className="text-base font-semibold">Acme Inc.</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
           <NavMainTop items={data.navMainTop} />
         </SidebarHeader>
+
+        {/* <SidebarHeader className={showBorder ? "border-b" : ""}>
+          <TeamSwitcher teams={data.teams} />
+          <NavMainTop items={data.navMainTop} />
+        </SidebarHeader> */}
+
         <SidebarContent
           ref={contentRef}
           onScroll={handleScroll}
@@ -410,6 +433,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             className="mt-auto"
           />
         </SidebarContent>
+
         <SidebarFooter>
           {/* <NavUser user={data.user} /> */}
           {/* <div className="p-1">
@@ -419,6 +443,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             v1.0.3 · Beta
           </div>
         </SidebarFooter>
+
         <SidebarRail />
       </Sidebar>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
