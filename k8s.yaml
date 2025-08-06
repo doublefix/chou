@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-chb-deployment
+  namespace: chessbod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-chb
+  template:
+    metadata:
+      labels:
+        app: frontend-chb
+    spec:
+      containers:
+      - name: frontend-chb
+        image: harbor.openpaper.co/chess/chb-web:20250806
+        ports:
+        - name: http
+          containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_API_BASE_URL
+          value: "http://10.187.6.190"
+        - name: NEXT_PUBLIC_GRAPHQL_URL
+          value: "http://10.187.6.190/api/graphql"
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-chb-service
+  namespace: chessbod
+spec:
+  selector:
+    app: frontend-chb
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
