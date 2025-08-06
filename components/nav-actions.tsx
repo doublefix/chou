@@ -13,11 +13,17 @@ import {
   LineChart,
   Link,
   MoreHorizontal,
+  Settings,
   Settings2,
   Star,
+  LayoutGrid,
+  AppWindow,
+  PanelsTopLeft,
+  Grid3x3,
   Trash,
   Trash2,
 } from "lucide-react";
+import { NineDotsIcon } from "@/components/icons/nine-dots";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -120,7 +126,8 @@ export function NavActions() {
             size="icon"
             className="h-6 w-6 data-[state=open]:bg-accent"
           >
-            <MoreHorizontal />
+            {/* <Grid3x3 className="w-4 h-4" /> */}
+            <NineDotsIcon />
           </Button>
         </PopoverTrigger>
         <PopoverContent
