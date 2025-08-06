@@ -2,11 +2,20 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { NavActions } from "@/components/nav-actions";
 import { Input } from "@/components/ui/input2";
 import { Search } from "lucide-react";
+import { NavUser } from "@/components/nav-user-top";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+
+const data = {
+  user: {
+    name: "shadcn",
+    email: "m@example.com",
+    avatar: "/avatars/shadcn.jpg",
+  },
+};
 
 export default function RootLayout({
   children,
@@ -28,8 +37,9 @@ export default function RootLayout({
               className="h-9 w-[360px] pl-10"
             />
           </div> */}
-          <div className="ml-auto px-3 gap-4 px-4 ">
+          <div className="ml-auto px-6 flex items-center gap-4">
             <NavActions />
+            <NavUser user={data.user} />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
