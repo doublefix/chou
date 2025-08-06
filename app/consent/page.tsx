@@ -1,10 +1,12 @@
 import ConsentPage from "@/components/login/consent";
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: { consent_challenge?: string };
-}) {
-  const { consent_challenge } = await Promise.resolve(searchParams);
+interface PageProps {
+  searchParams: Promise<{ consent_challenge?: string }>;
+}
+
+export default async function Page({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const { consent_challenge } = params;
+  
   return <ConsentPage consent_challenge={consent_challenge} />;
 }

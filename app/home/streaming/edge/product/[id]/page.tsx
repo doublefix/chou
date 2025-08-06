@@ -7,7 +7,7 @@ import { SingleProduct } from "@/app/home/streaming/_components/single-product";
 import { Ping } from "@/components/ui/test/ping";
 import { Suspense } from "react";
 
-export const runtime = "edge";
+// export const runtime = "edge";
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
