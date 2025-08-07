@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
 
-type RepoQuery = {
+export type RepoQuery = {
   q?: string;
   topic?: boolean;
   includeDesc?: boolean;

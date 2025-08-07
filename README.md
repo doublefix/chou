@@ -111,7 +111,7 @@ pnpm run codegen
 ## 本地调试
 ```bash
 telepresence list
-telepresence intercept frontend-oauth-test-deployment --port 3000:3000
-telepresence leave frontend-oauth-test-deployment
+telepresence intercept frontend-chb-deployment --port 3000:3000
+telepresence leave frontend-chb-deployment
 
 ```
