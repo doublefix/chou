@@ -1,10 +1,8 @@
 "use client";
 import { DataTable } from "@/components/dashboard/data-table-modelhub";
-
 import { useState, useEffect } from "react";
 import { useRepoList } from "@/hooks/useRepoList";
 import type { RepoQuery } from "@/hooks/useRepoList";
-import data from "./data.json";
 
 export default function Page() {
   const params: RepoQuery = {
@@ -27,11 +25,25 @@ export default function Page() {
     }
   }, [repoData, error]);
 
+  // 提取接口返回的仓库数据（适配 DataTable 格式）
+  const tableData = repoData?.data || [];
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <DataTable data={data} />
+          {/* 传递接口数据给表格，处理加载状态 */}
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <p>Loading repositories...</p>
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center h-64 text-red-500">
+              <p>Failed to load repositories. Please try again later.</p>
+            </div>
+          ) : (
+            <DataTable data={tableData} />
+          )}
         </div>
       </div>
     </div>
