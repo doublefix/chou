@@ -11,13 +11,20 @@ export async function fetcher(path: string, options?: RequestInit) {
 
   if (!res.ok) {
     const errorBody = await res.text();
-    throw new Error(`Request failed: ${res.status} ${res.statusText} - ${errorBody}`);
+    throw new Error(
+      `Request failed: ${res.status} ${res.statusText} - ${errorBody}`
+    );
   }
 
   const contentType = res.headers.get("content-type");
-  if (contentType && contentType.includes("application/json")) {
-    return res.json();
-  } else {
-    return res.text();
-  }
+  const data =
+    contentType && contentType.includes("application/json")
+      ? await res.json()
+      : await res.text();
+
+  return {
+    data,
+    headers: res.headers,
+    status: res.status,
+  };
 }

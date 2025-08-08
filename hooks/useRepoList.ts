@@ -49,9 +49,13 @@ export function useRepoList(params: RepoQuery = {}) {
     fetcher
   );
 
-  const totalCount = data?.headers?.["X-Total-Count"]
-    ? parseInt(data.headers["X-Total-Count"])
-    : data?.data?.length || 0;
+  const totalCountStr = data?.headers?.get
+    ? data.headers.get("X-Total-Count")
+    : undefined;
+
+  console.log("totalCountStr", totalCountStr);
+
+  const totalCount = totalCountStr ? parseInt(totalCountStr, 10) : 0;
 
   return {
     data: data?.data || [],
