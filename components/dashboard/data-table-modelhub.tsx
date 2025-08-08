@@ -434,20 +434,6 @@ export function DataTable({
               {/* 其他标签页保留 */}
             </TabsList>
             <div className="flex items-center gap-2">
-              {/* 保留原有列自定义和添加按钮 */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <ColumnsIcon />
-                    <span className="hidden lg:inline">Customize Columns</span>
-                    <span className="lg:hidden">Columns</span>
-                    <ChevronDownIcon />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  {/* 列自定义内容保留 */}
-                </DropdownMenuContent>
-              </DropdownMenu>
               <Button variant="outline" size="sm">
                 <PlusIcon />
                 <span className="hidden lg:inline">Add Repository</span>
