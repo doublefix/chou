@@ -17,8 +17,6 @@ export default function Page() {
 
   useEffect(() => {
     if (repoData) {
-      console.log("接口返回的数据:", repoData);
-      console.log("接口返回的数据:", totalCount);
       setFetched(true);
     }
     if (error) {
