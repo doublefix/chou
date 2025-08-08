@@ -5,19 +5,20 @@ import { useRepoList } from "@/hooks/useRepoList";
 import type { RepoQuery } from "@/hooks/useRepoList";
 
 export default function Page() {
-  const params: RepoQuery = {
+  const [params, setParams] = useState<RepoQuery>({
     page: 1,
-    limit: 10,
+    limit: 2,
     sort: "stars",
     order: "desc",
-  };
+  });
 
-  const { data: repoData, error, isLoading } = useRepoList(params);
+  const { data: repoData, totalCount, error, isLoading } = useRepoList(params);
   const [fetched, setFetched] = useState(false);
 
   useEffect(() => {
     if (repoData) {
       console.log("接口返回的数据:", repoData);
+      console.log("接口返回的数据:", totalCount);
       setFetched(true);
     }
     if (error) {
@@ -25,14 +26,18 @@ export default function Page() {
     }
   }, [repoData, error]);
 
-  // 提取接口返回的仓库数据（适配 DataTable 格式）
-  const tableData = repoData?.data || [];
+  const handlePageChange = (page: number) => {
+    setParams((prev) => ({ ...prev, page }));
+  };
+
+  const handlePageSizeChange = (limit: number) => {
+    setParams((prev) => ({ ...prev, limit, page: 1 }));
+  };
 
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          {/* 传递接口数据给表格，处理加载状态 */}
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <p>Loading repositories...</p>
@@ -42,7 +47,14 @@ export default function Page() {
               <p>Failed to load repositories. Please try again later.</p>
             </div>
           ) : (
-            <DataTable data={tableData} />
+            <DataTable
+              data={repoData}
+              totalCount={totalCount}
+              page={params.page ?? 1}
+              pageSize={params.limit ?? 10}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
           )}
         </div>
       </div>

@@ -15,7 +15,16 @@ export type RepoQuery = {
   archived?: boolean;
   mode?: "fork" | "source" | "mirror" | "collaborative";
   exclusive?: boolean;
-  sort?: "alpha" | "created" | "updated" | "size" | "git_size" | "lfs_size" | "stars" | "forks" | "id";
+  sort?:
+    | "alpha"
+    | "created"
+    | "updated"
+    | "size"
+    | "git_size"
+    | "lfs_size"
+    | "stars"
+    | "forks"
+    | "id";
   order?: "asc" | "desc";
   page?: number;
   limit?: number;
@@ -35,5 +44,19 @@ export function useRepoList(params: RepoQuery = {}) {
     ...params,
   });
 
-  return useSWR(`/api/v1/repos/search?${queryString}`, fetcher);
+  const { data, error, isLoading } = useSWR(
+    `/api/v1/repos/search?${queryString}`,
+    fetcher
+  );
+
+  const totalCount = data?.headers?.["X-Total-Count"]
+    ? parseInt(data.headers["X-Total-Count"])
+    : data?.data?.length || 0;
+
+  return {
+    data: data?.data || [],
+    totalCount,
+    error,
+    isLoading,
+  };
 }

@@ -91,32 +91,30 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const schema = z.object({
   id: z.number(),
-  name: z.string(), // 仓库名称
-  full_name: z.string(), // 完整名称（owner/name）
-  description: z.string().nullable(), // 仓库描述
+  name: z.string(),
+  full_name: z.string(),
+  description: z.string().nullable(),
   owner: z.object({
     id: z.number(),
-    login: z.string(), // 所有者用户名
-    avatar_url: z.string(), // 所有者头像
+    login: z.string(),
+    avatar_url: z.string(),
   }),
-  stars_count: z.number(), // 星级数量
-  forks_count: z.number(), // Fork 数量
-  created_at: z.string(), // 创建时间
-  updated_at: z.string(), // 更新时间
-  archived: z.boolean(), // 是否归档
-  private: z.boolean(), // 是否私有
-  default_branch: z.string(), // 新增：默认分支字段
+  stars_count: z.number(),
+  forks_count: z.number(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  archived: z.boolean(),
+  private: z.boolean(),
+  default_branch: z.string(),
 });
 
-// 筛选条件类型定义
 type FilterState = {
   search: string;
-  owners: string[]; // 按所有者筛选
-  archived: boolean | null; // 按归档状态筛选
-  private: boolean | null; // 按私有状态筛选
+  owners: string[];
+  archived: boolean | null;
+  private: boolean | null;
 };
 
-// 调整列定义 - 仅保留一个主要列用于渲染三行结构
 const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     accessorKey: "main",
@@ -130,8 +128,18 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
 
 export function DataTable({
   data: initialData,
+  totalCount,
+  page,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
 }: {
   data: z.infer<typeof schema>[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
 }) {
   const [data, setData] = React.useState(() => initialData);
   const [filteredData, setFilteredData] = React.useState(() => initialData);
@@ -142,11 +150,10 @@ export function DataTable({
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
+    pageIndex: page - 1,
+    pageSize,
   });
 
-  // 🌟 关键修改：更新筛选状态为仓库数据适配
   const [filters, setFilters] = React.useState<FilterState>({
     search: "",
     owners: [],
@@ -156,16 +163,13 @@ export function DataTable({
 
   const isMobile = useIsMobile();
 
-  // 🌟 关键修改：提取仓库数据的唯一筛选选项
   const uniqueOwners = Array.from(
     new Set(initialData.map((item) => item.owner.login))
   );
 
-  // 🌟 关键修改：更新筛选逻辑为仓库数据适配
   React.useEffect(() => {
     let result = [...initialData];
 
-    // 搜索筛选（名称、描述、所有者）
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       result = result.filter(
@@ -177,19 +181,16 @@ export function DataTable({
       );
     }
 
-    // 所有者筛选
     if (filters.owners.length > 0) {
       result = result.filter((item) =>
         filters.owners.includes(item.owner.login)
       );
     }
 
-    // 归档状态筛选
     if (filters.archived !== null) {
       result = result.filter((item) => item.archived === filters.archived);
     }
 
-    // 私有状态筛选
     if (filters.private !== null) {
       result = result.filter((item) => item.private === filters.private);
     }
@@ -198,6 +199,20 @@ export function DataTable({
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [filters, initialData]);
 
+  React.useEffect(() => {
+    setPagination({
+      pageIndex: page - 1,
+      pageSize,
+    });
+  }, [page, pageSize]);
+
+  const handlePaginationChange = (updater: any) => {
+    if (typeof updater === "function") {
+      const newPagination = updater(pagination);
+      onPageChange(newPagination.pageIndex + 1);
+      onPageSizeChange(newPagination.pageSize);
+    }
+  };
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -205,13 +220,12 @@ export function DataTable({
       sorting,
       columnVisibility,
       columnFilters,
-      pagination,
     },
     getRowId: (row) => row.id.toString(),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange: setPagination,
+    manualPagination: true,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -220,12 +234,10 @@ export function DataTable({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  // 🌟 关键修改：更新筛选器处理函数为仓库数据适配
   const handleFilterChange = (key: keyof FilterState, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  // 切换所有者筛选
   const toggleOwnerFilter = (owner: string) => {
     setFilters((prev) => {
       const owners = prev.owners.includes(owner)
@@ -235,7 +247,6 @@ export function DataTable({
     });
   };
 
-  // 清除所有筛选
   const clearAllFilters = () => {
     setFilters({
       search: "",
@@ -245,7 +256,6 @@ export function DataTable({
     });
   };
 
-  // 🌟 关键修改：更新筛选面板为仓库数据适配
   const FilterPanel = () => (
     <div className="flex flex-col gap-6 p-4">
       <div className="flex items-center justify-between">
@@ -267,7 +277,6 @@ export function DataTable({
         </Button>
       </div>
 
-      {/* 搜索筛选 */}
       <div className="space-y-2">
         <Label htmlFor="search-filter">Search Repositories</Label>
         <div className="relative">
@@ -294,7 +303,6 @@ export function DataTable({
       </div>
       <Separator />
 
-      {/* 所有者筛选 */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label>Owners</Label>
@@ -323,7 +331,6 @@ export function DataTable({
 
       <Separator />
 
-      {/* 归档状态筛选 */}
       <div className="space-y-3">
         <Label>Archived Status</Label>
         <div className="space-y-2">
@@ -356,7 +363,6 @@ export function DataTable({
 
       <Separator />
 
-      {/* 私有状态筛选 */}
       <div className="space-y-3">
         <Label>Visibility</Label>
         <div className="space-y-2">
@@ -391,14 +397,12 @@ export function DataTable({
 
   return (
     <div className="flex flex-col lg:flex-row w-full">
-      {/* 桌面端筛选面板 */}
       <div className="hidden lg:block w-96 ml-4 rounded-lg shrink-0">
         <ScrollArea className="h-[calc(100vh-4rem)]">
           <FilterPanel />
         </ScrollArea>
       </div>
 
-      {/* 主表格区域 */}
       <div className="flex-1">
         <Tabs
           defaultValue="outline"
@@ -419,7 +423,6 @@ export function DataTable({
                 onChange={(e) => handleFilterChange("search", e.target.value)}
               />
             </div>
-            {/* 保留原有 TabsList 和按钮组 */}
             <TabsList className="@4xl/main:flex hidden">
               <TabsTrigger value="outline">Repositories</TabsTrigger>
               <TabsTrigger value="past-performance" className="gap-1">
@@ -431,7 +434,6 @@ export function DataTable({
                   ↑
                 </Badge>
               </TabsTrigger>
-              {/* 其他标签页保留 */}
             </TabsList>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm">
@@ -440,8 +442,6 @@ export function DataTable({
               </Button>
             </div>
           </div>
-
-          {/* 活跃筛选器标签（适配仓库数据） */}
           {(filters.search ||
             filters.owners.length > 0 ||
             filters.archived !== null ||
@@ -520,7 +520,6 @@ export function DataTable({
             </div>
           )}
 
-          {/* 表格内容区域（主要内容不变，复用原有结构） */}
           <TabsContent
             value="outline"
             className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
@@ -569,14 +568,12 @@ export function DataTable({
                 </TableBody>
               </Table>
             </div>
-            {/* 🌟 恢复并优化的分页控件 */}
             <div className="flex items-center justify-between px-4">
               <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-                Showing {table.getRowModel().rows.length} of{" "}
-                {table.getFilteredRowModel().rows.length} results
+                Showing {(page - 1) * pageSize + 1}-
+                {Math.min(page * pageSize, totalCount)} of {totalCount} results
               </div>
               <div className="flex w-full items-center gap-4 lg:w-auto">
-                {/* 每页行数选择器 */}
                 <div className="hidden items-center gap-2 lg:flex">
                   <Label
                     htmlFor="rows-per-page"
@@ -585,15 +582,13 @@ export function DataTable({
                     Rows per page
                   </Label>
                   <Select
-                    value={`${table.getState().pagination.pageSize}`}
+                    value={`${pageSize}`}
                     onValueChange={(value) => {
-                      table.setPageSize(Number(value));
+                      onPageSizeChange(Number(value));
                     }}
                   >
                     <SelectTrigger className="w-20" id="rows-per-page">
-                      <SelectValue
-                        placeholder={table.getState().pagination.pageSize}
-                      />
+                      <SelectValue placeholder={pageSize} />
                     </SelectTrigger>
                     <SelectContent side="top">
                       {[5, 10, 20, 30].map((pageSize) => (
@@ -605,50 +600,52 @@ export function DataTable({
                   </Select>
                 </div>
 
-                {/* 分页导航按钮 */}
                 <div className="flex items-center gap-1">
                   <Button
                     variant="outline"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => table.setPageIndex(0)}
-                    disabled={!table.getCanPreviousPage()}
+                    onClick={() => onPageChange(1)}
+                    disabled={page === 1}
                   >
                     <ChevronsLeftIcon className="h-4 w-4" />
                     <span className="sr-only">First page</span>
                   </Button>
+
                   <Button
                     variant="outline"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
+                    onClick={() => onPageChange(page - 1)}
+                    disabled={page === 1}
                   >
                     <ChevronLeftIcon className="h-4 w-4" />
                     <span className="sr-only">Previous page</span>
                   </Button>
 
-                  {/* 页码显示 */}
                   <span className="flex items-center justify-center w-8 text-sm font-medium">
-                    {table.getState().pagination.pageIndex + 1}
+                    {page}
                   </span>
 
                   <Button
                     variant="outline"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
+                    onClick={() => onPageChange(page + 1)}
+                    disabled={page * pageSize >= totalCount}
                   >
                     <ChevronRightIcon className="h-4 w-4" />
                     <span className="sr-only">Next page</span>
                   </Button>
+
                   <Button
                     variant="outline"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                    disabled={!table.getCanNextPage()}
+                    onClick={() =>
+                      onPageChange(Math.ceil(totalCount / pageSize))
+                    }
+                    disabled={page * pageSize >= totalCount} // 最后一页时禁用
                   >
                     <ChevronsRightIcon className="h-4 w-4" />
                     <span className="sr-only">Last page</span>
@@ -657,60 +654,42 @@ export function DataTable({
               </div>
             </div>
           </TabsContent>
-          {/* 其他标签页内容保留 */}
         </Tabs>
       </div>
     </div>
   );
 }
 
-// 🌟 关键修改：更新行内容为仓库数据适配
-// 🌟 优化后的行内容组件
 function RowContent({ item }: { item: z.infer<typeof schema> }) {
-  // 格式化日期显示
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  // 获取所有者名称首字母作为 fallback
   const getInitials = (name: string) => {
     return name.charAt(0).toUpperCase();
   };
 
   return (
     <div className="p-4 space-y-3">
-      {/* 第一行：头像、项目名称（大字体）、Star按钮 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* 头像 */}
           <Avatar className="h-8 w-8">
-            <AvatarImage
-              src={item.owner.avatar_url}
-              alt={item.owner.login}
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
             <AvatarFallback>{getInitials(item.owner.login)}</AvatarFallback>
           </Avatar>
 
-          {/* 项目名称（放大字体） */}
           <TableCellViewer item={item} />
         </div>
 
-        {/* 行尾部 Star 按钮 */}
         <Button size="sm" variant="outline" className="gap-1">
           <StarIcon className="h-4 w-4" />
           Star
         </Button>
       </div>
 
-      {/* 第二行：项目描述 */}
       <div className="text-sm text-muted-foreground">
         {item.description || "No description provided"}
       </div>
 
-      {/* 第三行：项目标签 */}
       <div className="flex flex-wrap gap-2">
         <Badge variant={item.private ? "secondary" : "outline"}>
           {item.private ? "Private" : "Public"}
@@ -722,7 +701,6 @@ function RowContent({ item }: { item: z.infer<typeof schema> }) {
         </Badge>
       </div>
 
-      {/* 第四行：Star数、最近更新时间 */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div className="flex items-center gap-1">
           <StarIcon className="h-4 w-4 text-yellow-500" />
@@ -773,7 +751,6 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
           <SheetDescription>Repository details and statistics</SheetDescription>
         </SheetHeader>
         <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4 text-sm">
-          {/* 仓库基本信息 */}
           <div className="flex items-center gap-3">
             <img
               src={item.owner.avatar_url}
@@ -786,12 +763,10 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
             </div>
           </div>
 
-          {/* 仓库描述 */}
           <div className="p-3 bg-muted rounded-lg">
             {item.description || "No description provided for this repository."}
           </div>
 
-          {/* 仓库统计信息 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <div className="text-muted-foreground">Stars</div>
@@ -817,7 +792,6 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
             </div>
           </div>
 
-          {/* 仓库状态标签 */}
           <div className="flex flex-wrap gap-2">
             <Badge variant={item.private ? "secondary" : "outline"}>
               {item.private ? "Private" : "Public"}
