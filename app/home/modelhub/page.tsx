@@ -12,17 +12,17 @@ export default function Page() {
     order: "desc",
   });
 
-  const { data: repoData, totalCount, error, isLoading } = useRepoList(params);
+  const { repos, totalCount, error, isLoading } = useRepoList(params);
   const [fetched, setFetched] = useState(false);
 
   useEffect(() => {
-    if (repoData) {
+    if (repos) {
       setFetched(true);
     }
     if (error) {
       console.error("接口调用失败:", error);
     }
-  }, [repoData, error]);
+  }, [repos, error]);
 
   const handlePageChange = (page: number) => {
     setParams((prev) => ({ ...prev, page }));
@@ -36,7 +36,7 @@ export default function Page() {
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          {/* {isLoading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <p>Loading repositories...</p>
             </div>
@@ -46,14 +46,14 @@ export default function Page() {
             </div>
           ) : (
             <DataTable
-              data={repoData}
+              data={repos}
               totalCount={totalCount}
               page={params.page ?? 1}
               pageSize={params.limit ?? 10}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
             />
-          )} */}
+          )}
         </div>
       </div>
     </div>

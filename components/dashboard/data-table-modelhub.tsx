@@ -591,7 +591,7 @@ export function DataTable({
                       <SelectValue placeholder={pageSize} />
                     </SelectTrigger>
                     <SelectContent side="top">
-                      {[5, 10, 20, 30].map((pageSize) => (
+                      {[2, 5, 10, 20, 30].map((pageSize) => (
                         <SelectItem key={pageSize} value={`${pageSize}`}>
                           {pageSize}
                         </SelectItem>
