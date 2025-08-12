@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -733,87 +734,21 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
-  const isMobile = useIsMobile();
+  const router = useRouter();
+
+  const handleClick = () => {
+    // 跳转到项目详情页
+    router.push(`/home/modelhub/${item.id}`);
+  };
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button
-          variant="link"
-          className="w-fit px-0 text-left text-foreground font-semibold text-lg" // 增大字体
-        >
-          {item.full_name}
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="flex flex-col">
-        <SheetHeader className="gap-1">
-          <SheetTitle>{item.full_name}</SheetTitle>
-          <SheetDescription>Repository details and statistics</SheetDescription>
-        </SheetHeader>
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4 text-sm">
-          <div className="flex items-center gap-3">
-            <img
-              src={item.owner.avatar_url}
-              alt={item.owner.login}
-              className="h-12 w-12 rounded-full object-cover"
-            />
-            <div>
-              <div className="font-medium">{item.owner.login}</div>
-              <div className="text-muted-foreground">Repository Owner</div>
-            </div>
-          </div>
-
-          <div className="p-3 bg-muted rounded-lg">
-            {item.description || "No description provided for this repository."}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <div className="text-muted-foreground">Stars</div>
-              <div className="flex items-center gap-1 font-medium">
-                <StarIcon className="h-4 w-4 text-yellow-500" />
-                {item.stars_count}
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="text-muted-foreground">Forks</div>
-              <div className="flex items-center gap-1 font-medium">
-                <GitBranchIcon className="h-4 w-4" />
-                {item.forks_count}
-              </div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="text-muted-foreground">Created</div>
-              <div className="font-medium">{formatDate(item.created_at)}</div>
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="text-muted-foreground">Last Updated</div>
-              <div className="font-medium">{formatDate(item.updated_at)}</div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Badge variant={item.private ? "secondary" : "outline"}>
-              {item.private ? "Private" : "Public"}
-            </Badge>
-            {item.archived && <Badge variant="destructive">Archived</Badge>}
-            <Badge variant="outline">
-              <GitBranchIcon className="h-3 w-3 mr-1" />
-              {item.default_branch || "main"}
-            </Badge>
-          </div>
-        </div>
-        <SheetFooter className="mt-auto flex gap-2">
-          <Button>
-            <GitBranchIcon className="h-4 w-4 mr-2" />
-            Clone Repository
-          </Button>
-          <SheetClose asChild>
-            <Button variant="outline">Close</Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+    <Button
+      variant="link"
+      className="w-fit px-0 text-left text-foreground font-semibold text-lg"
+      onClick={handleClick}
+    >
+      {item.full_name}
+    </Button>
   );
 }
 
