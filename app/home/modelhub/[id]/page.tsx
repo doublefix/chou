@@ -16,7 +16,8 @@ import {
   ClockIcon,
   TagIcon,
   BookOpenIcon,
-  LinkIcon,
+  Rocket,
+  Wrench,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Separator } from "@/components/ui/separator";
@@ -298,27 +299,12 @@ export default function RepoDetailPage() {
               <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Back
             </Button>
-            <Separator orientation="vertical" className="h-4" />
-            <nav className="text-sm text-muted-foreground">
-              <span>Repositories</span>
-              <span className="mx-2">/</span>
-              <span className="text-foreground font-medium">{repo.name}</span>
-            </nav>
           </div>
 
           {/* Repository Header */}
           <div className="flex flex-col gap-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={repo.owner.avatar_url}
-                    alt={repo.owner.login}
-                  />
-                  <AvatarFallback>
-                    {repo.owner.login.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
                 <div>
                   <h1 className="text-2xl font-bold">
                     <span className="text-muted-foreground">
@@ -327,12 +313,6 @@ export default function RepoDetailPage() {
                     <span className="mx-2">/</span>
                     <span>{repo.name}</span>
                   </h1>
-                  <Badge
-                    variant={repo.private ? "secondary" : "outline"}
-                    className="mt-1"
-                  >
-                    {repo.private ? "Private" : "Public"}
-                  </Badge>
                 </div>
               </div>
 
@@ -377,12 +357,6 @@ export default function RepoDetailPage() {
                   {topic}
                 </Badge>
               ))}
-              {repo.homepage && (
-                <Button variant="ghost" size="sm" className="h-6 px-2 text-sm">
-                  <LinkIcon className="h-3 w-3 mr-1" />
-                  {new URL(repo.homepage).hostname}
-                </Button>
-              )}
             </div>
 
             {/* Stats */}
@@ -406,7 +380,7 @@ export default function RepoDetailPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             {/* Branch and Clone */}
@@ -419,15 +393,21 @@ export default function RepoDetailPage() {
                     default
                   </Badge>
                 </Button>
-                <Button variant="outline" size="sm" className="gap-1">
-                  <TagIcon className="h-4 w-4" />
-                  Tags
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="gap-1">
+                  <DownloadIcon className="h-4 w-4" />
+                  下载
+                </Button>
+                <Button variant="outline" className="gap-1">
+                  <Wrench className="h-4 w-4" />
+                  训练
+                </Button>
+                <Button className="gap-1">
+                  <Rocket className="h-4 w-4" />
+                  部署
                 </Button>
               </div>
-              <Button className="gap-2">
-                <DownloadIcon className="h-4 w-4" />
-                Code
-              </Button>
             </div>
 
             {/* File Browser */}
