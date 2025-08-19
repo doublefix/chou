@@ -281,7 +281,6 @@ export default function RepoDetailPage() {
 
   const repoInfo = getRepoInfo("admin", "opus-mt-en-fr-test-upload");
 
-  console.log(repoInfo)
 
   if (loading) {
     return (

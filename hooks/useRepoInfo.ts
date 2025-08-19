@@ -49,7 +49,7 @@ export interface RepoInfo {
   private: boolean;
   fork: boolean;
   template: boolean;
-  parent: any; // 可能是 null 或另一个仓库对象
+  parent: any;
   mirror: boolean;
   size: number;
   language: string;
@@ -97,18 +97,34 @@ export interface RepoInfo {
   mirror_interval: string;
   object_format_name: string;
   mirror_updated: string;
-  repo_transfer: any; // 可能是 null 或传输对象
+  repo_transfer: any;
   topics: string[];
-  licenses: any; // 可能是 null 或许可证对象
+  licenses: any;
 }
 
-export function useRepoInfo(owner: string, repo: string) {
-  const { data, error, isLoading, mutate } = useSWR(
-    `/api/v1/repos/${owner}/${repo}`,
-    fetcher
-  );
+export interface RepoInfoParams {
+  ref?: string;
+}
 
-  const repoInfo: RepoInfo | null = data?.data || null;
+export function useRepoInfo(
+  owner: string,
+  repo: string,
+  params: RepoInfoParams = {}
+) {
+  const queryParams = new URLSearchParams();
+  if (params.ref) {
+    queryParams.append("ref", params.ref);
+  }
+
+  const queryString = queryParams.toString();
+  const url = `/api/v1/repos/${owner}/${repo}${
+    queryString ? `?${queryString}` : ""
+  }`;
+
+  const { data, error, isLoading, mutate } = useSWR(url, fetcher);
+
+  const response = data?.data;
+  const repoInfo: RepoInfo | null = response || null;
 
   return {
     repoInfo,
@@ -120,10 +136,21 @@ export function useRepoInfo(owner: string, repo: string) {
 
 export async function getRepoInfo(
   owner: string,
-  repo: string
+  repo: string,
+  params: RepoInfoParams = {}
 ): Promise<RepoInfo> {
   try {
-    const response = await fetcher(`/api/v1/repos/${owner}/${repo}`);
+    const queryParams = new URLSearchParams();
+    if (params.ref) {
+      queryParams.append("ref", params.ref);
+    }
+
+    const queryString = queryParams.toString();
+    const url = `/api/v1/repos/${owner}/${repo}${
+      queryString ? `?${queryString}` : ""
+    }`;
+
+    const response = await fetcher(url);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch repository info:", error);
