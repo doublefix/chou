@@ -17,6 +17,8 @@ import {
   BookOpenIcon,
   Rocket,
   Wrench,
+  BookIcon,
+  FlaskConicalIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Separator } from "@/components/ui/separator";
@@ -265,9 +267,9 @@ export default function RepoDetailPage() {
   const [activeTab, setActiveTab] = useState("account");
 
   const tabs = [
-    { value: "account", label: "README" },
-    { value: "password", label: "Files and versions" },
-    { value: "test", label: "Test" },
+    { value: "account", label: "README", icon: BookIcon },
+    { value: "password", label: "Files and versions", icon: FolderIcon },
+    { value: "test", label: "Test", icon: FlaskConicalIcon },
   ];
 
   if (loading) {
@@ -373,20 +375,24 @@ export default function RepoDetailPage() {
         <div className="container px-4 sm:px-6 lg:px-10">
           {/* Tabs */}
           <div className="flex relative z-10">
-            {tabs.map((tab) => (
-              <div
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={`cursor-pointer px-3 py-2 font-medium transition-all border-b-2
-          ${
-            activeTab === tab.value
-              ? "text-black font-bold border-black"
-              : "text-black/50 border-transparent"
-          }`}
-              >
-                {tab.label}
-              </div>
-            ))}
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <div
+                  key={tab.value}
+                  onClick={() => setActiveTab(tab.value)}
+                  className={`cursor-pointer flex items-center gap-2 px-3 py-2 text-sm font-medium transition-all border-b-2
+                ${
+                  activeTab === tab.value
+                    ? "text-black font-bold border-black"
+                    : "text-black/50 border-transparent"
+                }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </div>
+              );
+            })}
           </div>
         </div>
 
