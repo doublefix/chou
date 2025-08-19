@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRepoContents } from "@/hooks/useRepoContent";
+import { getRepoInfo } from "@/hooks/useRepoInfo";
 import {
   StarIcon,
   GitBranchIcon,
@@ -277,7 +278,10 @@ export default function RepoDetailPage() {
     ".dvc",
     { ref: "main" }
   );
-  
+
+  const repoInfo = getRepoInfo("admin", "opus-mt-en-fr-test-upload");
+
+  console.log(repoInfo)
 
   if (loading) {
     return (
