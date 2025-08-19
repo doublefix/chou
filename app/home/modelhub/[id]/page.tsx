@@ -279,7 +279,7 @@ export default function RepoDetailPage() {
     { ref: "main" }
   );
 
-  const repoInfo = getRepoInfo("admin", "opus-mt-en-fr-test-upload");
+  // const repoInfo = getRepoInfo("admin", "opus-mt-en-fr-test-upload");
 
 
   if (loading) {
