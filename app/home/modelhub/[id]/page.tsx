@@ -451,9 +451,10 @@ export default function RepoDetailPage() {
                 {mockFiles.map((file) => (
                   <div
                     key={file.name}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors"
+                    className="grid grid-cols-[1fr_60px_60px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-2"
                   >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {/* 列 1：文件/文件夹图标和名称 */}
+                    <div className="flex items-center gap-2 min-w-0">
                       {file.type === "dir" ? (
                         <FolderIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
                       ) : (
@@ -461,22 +462,39 @@ export default function RepoDetailPage() {
                       )}
                       <Button
                         variant="ghost"
-                        className="p-0 h-auto font-medium text-blue-600 hover:text-blue-800 hover:underline text-left"
+                        className="p-0 h-auto font-medium text-black hover:text-blue-800 hover:underline text-left truncate"
                       >
                         {file.name}
                       </Button>
                     </div>
-                    <div className="hidden md:block text-sm text-muted-foreground max-w-md truncate">
+
+                    {/* 列 2：文件大小 */}
+                    <div className="text-sm text-muted-foreground/60 text-center">
+                      {file.size || ""}
+                    </div>
+
+                    {/* 列 3：下载按钮 */}
+                    <div className="flex justify-center">
+                      {file.type === "file" ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-muted-foreground/60 hover:text-foreground flex items-center justify-center"
+                        >
+                          <DownloadIcon className="h-4 w-4" />
+                        </Button>
+                      ) : null}
+                    </div>
+
+                    {/* 列 4：提交信息 */}
+                    <div className="text-sm text-muted-foreground/60 truncate max-w-md">
                       {file.last_commit.message}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+
+                    {/* 列 5：更新时间 */}
+                    <div className="text-sm text-muted-foreground/60 whitespace-nowrap text-right">
                       {formatDate(file.last_commit.date)}
                     </div>
-                    {file.size && (
-                      <div className="text-sm text-muted-foreground w-16 text-right">
-                        {file.size}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
