@@ -451,7 +451,7 @@ export default function RepoDetailPage() {
                 {mockFiles.map((file) => (
                   <div
                     key={file.name}
-                    className="grid grid-cols-[1fr_60px_60px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-2"
+                    className="grid grid-cols-[1fr_100px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-4"
                   >
                     {/* 列 1：文件/文件夹图标和名称 */}
                     <div className="flex items-center gap-2 min-w-0">
@@ -468,14 +468,15 @@ export default function RepoDetailPage() {
                       </Button>
                     </div>
 
-                    {/* 列 2：文件大小 */}
-                    <div className="text-sm text-muted-foreground/60 text-center">
-                      {file.size || ""}
-                    </div>
+                    {/* 列 2 & 3：文件大小 + 下载按钮 */}
+                    <div className="flex items-center justify-center space-x-2">
+                      {/* 文件大小 */}
+                      <div className="text-sm text-muted-foreground/60 text-center">
+                        {file.size || ""}
+                      </div>
 
-                    {/* 列 3：下载按钮 */}
-                    <div className="flex justify-center">
-                      {file.type === "file" ? (
+                      {/* 下载按钮 */}
+                      {file.type === "file" && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -483,7 +484,7 @@ export default function RepoDetailPage() {
                         >
                           <DownloadIcon className="h-4 w-4" />
                         </Button>
-                      ) : null}
+                      )}
                     </div>
 
                     {/* 列 4：提交信息 */}
