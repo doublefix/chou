@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   StarIcon,
   GitBranchIcon,
@@ -261,6 +262,13 @@ export default function RepoDetailPage() {
   const router = useRouter();
   const id = params.id as string;
   const { repo, loading } = useRepoDetail(id);
+  const [activeTab, setActiveTab] = useState("account");
+
+  const tabs = [
+    { value: "account", label: "README" },
+    { value: "password", label: "Files and versions" },
+    { value: "test", label: "Test" },
+  ];
 
   if (loading) {
     return (
@@ -361,14 +369,35 @@ export default function RepoDetailPage() {
             </div>
           </div>
         </div>
-        <div className="border-t border-gray-200" />
+
+        <div className="container px-4 sm:px-6 lg:px-10">
+          {/* Tabs */}
+          <div className="flex relative z-10">
+            {tabs.map((tab) => (
+              <div
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={`cursor-pointer px-3 py-2 font-medium transition-all border-b-2
+          ${
+            activeTab === tab.value
+              ? "text-black font-bold border-black"
+              : "text-black/50 border-transparent"
+          }`}
+              >
+                {tab.label}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 mb-2" />
       </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-10 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-4">
             {/* Branch and Clone */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -442,8 +471,10 @@ export default function RepoDetailPage() {
                     {/* 列 1：文件/文件夹图标和名称 */}
                     <div className="flex items-center gap-2 min-w-0">
                       {file.type === "dir" ? (
-                        // <FolderIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                        <FolderIcon className="h-4 w-4 text-blue-400" fill="currentColor" />
+                        <FolderIcon
+                          className="h-4 w-4 text-blue-400"
+                          fill="currentColor"
+                        />
                       ) : (
                         <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       )}
