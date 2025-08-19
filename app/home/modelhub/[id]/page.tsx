@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   StarIcon,
   GitBranchIcon,
@@ -21,7 +20,6 @@ import {
   FlaskConicalIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Separator } from "@/components/ui/separator";
 
 type Repo = {
   id: number;
