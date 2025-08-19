@@ -328,13 +328,6 @@ export default function RepoDetailPage() {
               {/* Action Buttons */}
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm">
-                  <EyeIcon className="h-4 w-4 mr-1" />
-                  Watch
-                  <Badge variant="secondary" className="ml-2">
-                    {repo.watchers_count}
-                  </Badge>
-                </Button>
-                <Button variant="outline" size="sm">
                   <StarIcon className="h-4 w-4 mr-1" />
                   Star
                   <Badge variant="secondary" className="ml-2">
