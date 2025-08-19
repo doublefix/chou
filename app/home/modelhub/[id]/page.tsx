@@ -11,18 +11,14 @@ import {
   EyeIcon,
   GitForkIcon,
   DownloadIcon,
-  CodeIcon,
   FileIcon,
   FolderIcon,
   ClockIcon,
   TagIcon,
-  ShieldIcon,
   BookOpenIcon,
   LinkIcon,
-  UsersIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 
 type Repo = {
@@ -434,40 +430,41 @@ export default function RepoDetailPage() {
               </Button>
             </div>
 
-            {/* Latest Commit */}
-            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border">
-              <Avatar className="h-6 w-6">
-                <AvatarImage
-                  src={repo.owner.avatar_url}
-                  alt={repo.owner.login}
-                />
-                <AvatarFallback>
-                  {repo.owner.login.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {repo.latest_commit.message}
-                </p>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{repo.latest_commit.author}</span>
-                  <span>committed {formatDate(repo.latest_commit.date)}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <div className="h-4 w-4" />
-                <code className="bg-background px-2 py-1 rounded text-xs">
-                  {repo.latest_commit.sha}
-                </code>
-              </div>
-            </div>
-
             {/* File Browser */}
             <div className="border rounded-lg overflow-hidden">
               <div className="bg-muted/50 px-4 py-3 border-b">
-                <div className="flex items-center gap-2 text-sm">
-                  <FolderIcon className="h-4 w-4" />
-                  <span className="font-medium">{mockFiles.length} files</span>
+                <div className="flex items-center justify-between w-full gap-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Avatar className="h-4 w-4 flex-shrink-0">
+                      <AvatarImage
+                        src={repo.owner.avatar_url}
+                        alt={repo.owner.login}
+                      />
+                      <AvatarFallback>
+                        {repo.owner.login.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <p className="text-sm font-medium truncate">
+                        {repo.latest_commit.message}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">
+                      <span>{repo.latest_commit.author}</span>
+                      <span className="mx-1">•</span>
+                      <span>
+                        committed {formatDate(repo.latest_commit.date)}
+                      </span>
+                    </div>
+
+                    <code className="bg-background px-2 py-1 rounded text-xs text-muted-foreground whitespace-nowrap">
+                      {repo.latest_commit.sha.substring(0, 7)}
+                    </code>
+                  </div>
                 </div>
               </div>
               <div className="divide-y">
@@ -519,115 +516,6 @@ export default function RepoDetailPage() {
                     {mockReadme}
                   </pre>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* About */}
-            <div>
-              <h2 className="font-semibold mb-3">About</h2>
-              <div className="space-y-3 text-sm">
-                <p className="text-muted-foreground">{repo.description}</p>
-
-                {repo.homepage && (
-                  <div>
-                    <div className="flex items-center gap-2 font-medium mb-1">
-                      <LinkIcon className="h-4 w-4" />
-                      <span>Homepage</span>
-                    </div>
-                    <a
-                      href={repo.homepage}
-                      className="text-blue-600 hover:underline break-all"
-                    >
-                      {repo.homepage}
-                    </a>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">Language</span>
-                    <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span>{repo.language}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">License</span>
-                    <span>{repo.license}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Stats */}
-            <div>
-              <h2 className="font-semibold mb-3">Stats</h2>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <StarIcon className="h-4 w-4" />
-                    Stars
-                  </span>
-                  <span className="font-medium">
-                    {repo.stars_count.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <EyeIcon className="h-4 w-4" />
-                    Watchers
-                  </span>
-                  <span className="font-medium">
-                    {repo.watchers_count.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <GitForkIcon className="h-4 w-4" />
-                    Forks
-                  </span>
-                  <span className="font-medium">
-                    {repo.forks_count.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Releases */}
-            <div>
-              <h2 className="font-semibold mb-3 flex items-center justify-between">
-                <span>Releases</span>
-                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                  View all
-                </Button>
-              </h2>
-              <div className="text-sm text-muted-foreground">
-                No releases published
-              </div>
-            </div>
-
-            {/* Contributors */}
-            <div>
-              <h2 className="font-semibold mb-3 flex items-center justify-between">
-                <span>Contributors</span>
-                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
-                  View all
-                </Button>
-              </h2>
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={repo.owner.avatar_url}
-                    alt={repo.owner.login}
-                  />
-                  <AvatarFallback>
-                    {repo.owner.login.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium">{repo.owner.login}</span>
               </div>
             </div>
           </div>
