@@ -451,7 +451,7 @@ export default function RepoDetailPage() {
                 {mockFiles.map((file) => (
                   <div
                     key={file.name}
-                    className="grid grid-cols-[1fr_100px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-4"
+                    className="grid grid-cols-[1fr_100px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-6"
                   >
                     {/* 列 1：文件/文件夹图标和名称 */}
                     <div className="flex items-center gap-2 min-w-0">
@@ -468,10 +468,9 @@ export default function RepoDetailPage() {
                       </Button>
                     </div>
 
-                    {/* 列 2 & 3：文件大小 + 下载按钮 */}
                     <div className="flex items-center justify-center space-x-2">
-                      {/* 文件大小 */}
-                      <div className="text-sm text-muted-foreground/60 text-center">
+                      {/* 固定宽度，右对齐 */}
+                      <div className="text-sm text-muted-foreground/60 text-right w-[60px]">
                         {file.size || ""}
                       </div>
 
