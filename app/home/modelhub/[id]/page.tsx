@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRepoContents } from "@/hooks/useRepoContent";
 import {
   StarIcon,
   GitBranchIcon,
@@ -269,6 +270,14 @@ export default function RepoDetailPage() {
     { value: "password", label: "Files and versions", icon: FolderIcon },
     { value: "test", label: "Test", icon: FlaskConicalIcon },
   ];
+
+  const { contents, isLoading, error } = useRepoContents(
+    "admin",
+    "opus-mt-en-fr-test-upload",
+    ".dvc",
+    { ref: "main" }
+  );
+  
 
   if (loading) {
     return (
