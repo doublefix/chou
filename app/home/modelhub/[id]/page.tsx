@@ -13,8 +13,6 @@ import {
   DownloadIcon,
   FileIcon,
   FolderIcon,
-  ClockIcon,
-  TagIcon,
   BookOpenIcon,
   Rocket,
   Wrench,
@@ -292,13 +290,16 @@ export default function RepoDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4 mb-4">
-            <Button variant="ghost" size="sm" onClick={() => router.back()}>
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+      <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container px-4 sm:px-6 lg:px-10 py-6">
+          <div className="mb-4">
+            <div
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+              onClick={() => router.back()}
+            >
+              <ArrowLeftIcon className="h-4 w-4" />
               Back
-            </Button>
+            </div>
           </div>
 
           {/* Repository Header */}
@@ -358,28 +359,13 @@ export default function RepoDetailPage() {
                 </Badge>
               ))}
             </div>
-
-            {/* Stats */}
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span>{repo.language}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <TagIcon className="h-4 w-4" />
-                <span>{repo.license}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <ClockIcon className="h-4 w-4" />
-                <span>Updated {formatDate(repo.updated_at)}</span>
-              </div>
-            </div>
           </div>
         </div>
+        <div className="border-t border-gray-200" />
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-10 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
@@ -456,7 +442,8 @@ export default function RepoDetailPage() {
                     {/* 列 1：文件/文件夹图标和名称 */}
                     <div className="flex items-center gap-2 min-w-0">
                       {file.type === "dir" ? (
-                        <FolderIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        // <FolderIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                        <FolderIcon className="h-4 w-4 text-blue-400" fill="currentColor" />
                       ) : (
                         <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       )}
