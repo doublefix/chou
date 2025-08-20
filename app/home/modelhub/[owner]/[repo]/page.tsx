@@ -171,69 +171,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 `;
 
-const useRepoDetail = (id: string) => {
-  const [repo, setRepo] = useState<Repo | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRepo = async () => {
-      try {
-        // 示例数据 - 模拟更完整的GitHub仓库信息
-        const mockData: Repo = {
-          id: parseInt(id),
-          name: "awesome-nextjs-app",
-          full_name: "johndoe/awesome-nextjs-app",
-          description:
-            "A modern web application built with Next.js, TypeScript, and Tailwind CSS. Features responsive design, server-side rendering, and optimized performance.",
-          owner: {
-            id: 1,
-            login: "johndoe",
-            avatar_url:
-              "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face",
-          },
-          stars_count: 1247,
-          forks_count: 89,
-          watchers_count: 234,
-          created_at: "2023-03-15T10:30:00Z",
-          updated_at: "2024-01-22T14:25:00Z",
-          archived: false,
-          private: false,
-          default_branch: "main",
-          language: "TypeScript",
-          license: "MIT",
-          topics: [
-            "nextjs",
-            "typescript",
-            "tailwindcss",
-            "react",
-            "web-development",
-          ],
-          homepage: "https://awesome-nextjs-app.vercel.app",
-          clone_url: "https://github.com/johndoe/awesome-nextjs-app.git",
-          latest_commit: {
-            sha: "a1b2c3d",
-            message: "feat: add dark mode support and improve accessibility",
-            author: "johndoe",
-            date: "2024-01-22T14:25:00Z",
-          },
-        };
-
-        setRepo(mockData);
-      } catch (error) {
-        console.error("Failed to fetch repo:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchRepo();
-    }
-  }, [id]);
-
-  return { repo, loading };
-};
-
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
@@ -265,16 +202,6 @@ export default function RepoDetailPage() {
   const owner = params.owner;
   const repoName = params.repo;
 
-  const id = "1";
-  const { repo, loading } = useRepoDetail(id);
-
-  const [activeTab, setActiveTab] = useState("account");
-  const tabs = [
-    { value: "account", label: "README", icon: BookIcon },
-    { value: "password", label: "Files and versions", icon: FolderIcon },
-    { value: "test", label: "Test", icon: FlaskConicalIcon },
-  ];
-
   const {
     repoDetail,
     error: detailError,
@@ -295,7 +222,14 @@ export default function RepoDetailPage() {
     { ref: repoDetail?.default_branch }
   );
 
-  if (loading) {
+  const [activeTab, setActiveTab] = useState("account");
+  const tabs = [
+    { value: "account", label: "README", icon: BookIcon },
+    { value: "password", label: "Files and versions", icon: FolderIcon },
+    { value: "test", label: "Test", icon: FlaskConicalIcon },
+  ];
+
+  if (detailLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -306,7 +240,7 @@ export default function RepoDetailPage() {
     );
   }
 
-  if (!repo) {
+  if (detailError || !repoDetail) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -342,10 +276,10 @@ export default function RepoDetailPage() {
                 <div>
                   <h1 className="text-2xl font-bold">
                     <span className="text-muted-foreground">
-                      {repo.owner.login}
+                      {repoDetail.owner.login}
                     </span>
                     <span className="mx-2">/</span>
-                    <span>{repo.name}</span>
+                    <span>{repoDetail.name}</span>
                   </h1>
                 </div>
               </div>
@@ -356,35 +290,37 @@ export default function RepoDetailPage() {
                   <StarIcon className="h-4 w-4 mr-1" />
                   Star
                   <Badge variant="secondary" className="ml-2">
-                    {repo.stars_count}
+                    {repoDetail.stars_count}
                   </Badge>
                 </Button>
                 <Button variant="outline" size="sm">
                   <GitForkIcon className="h-4 w-4 mr-1" />
                   Fork
                   <Badge variant="secondary" className="ml-2">
-                    {repo.forks_count}
+                    {repoDetail.forks_count}
                   </Badge>
                 </Button>
               </div>
             </div>
 
             <p className="text-muted-foreground max-w-3xl">
-              {repo.description}
+              {repoDetail.description || "No description provided"}
             </p>
 
             {/* Topics and Links */}
-            <div className="flex flex-wrap items-center gap-3">
-              {repo.topics.map((topic) => (
-                <Badge
-                  key={topic}
-                  variant="secondary"
-                  className="bg-blue-50 text-blue-700 hover:bg-blue-100"
-                >
-                  {topic}
-                </Badge>
-              ))}
-            </div>
+            {repoDetail.topics && repoDetail.topics.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3">
+                {repoDetail.topics.map((topic) => (
+                  <Badge
+                    key={topic}
+                    variant="secondary"
+                    className="bg-blue-50 text-blue-700 hover:bg-blue-100"
+                  >
+                    {topic}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -425,7 +361,7 @@ export default function RepoDetailPage() {
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm" className="gap-1">
                   <GitBranchIcon className="h-4 w-4" />
-                  {repo.default_branch}
+                  {repoDetail.default_branch}
                   <Badge variant="secondary" className="ml-1">
                     default
                   </Badge>
@@ -453,33 +389,29 @@ export default function RepoDetailPage() {
                 <div className="flex items-center justify-between w-full gap-3">
                   <div className="flex items-center gap-3 flex-1">
                     <Avatar className="h-4 w-4 flex-shrink-0">
-                      <AvatarImage
-                        src={repo.owner.avatar_url}
-                        alt={repo.owner.login}
-                      />
                       <AvatarFallback>
-                        {repo.owner.login.charAt(0).toUpperCase()}
+                        {repoDetail.owner.login.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1 min-w-0 overflow-hidden">
                       <p className="text-sm font-medium truncate">
-                        {repo.latest_commit.message}
+                        {/* 这里使用模拟的提交信息，实际应该从接口获取 */}
+                        Latest commit on {repoDetail.default_branch}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-4">
                     <div className="text-xs text-muted-foreground whitespace-nowrap">
-                      <span>{repo.latest_commit.author}</span>
+                      <span>{repoDetail.owner.login}</span>
                       <span className="mx-1">•</span>
-                      <span>
-                        committed {formatDate(repo.latest_commit.date)}
-                      </span>
+                      <span>updated {formatDate(repoDetail.updated_at)}</span>
                     </div>
 
                     <code className="bg-background px-2 py-1 rounded text-xs text-muted-foreground whitespace-nowrap">
-                      {repo.latest_commit.sha.substring(0, 7)}
+                      {/* 这里使用模拟的commit sha，实际应该从接口获取 */}
+                      a1b2c3d
                     </code>
                   </div>
                 </div>
