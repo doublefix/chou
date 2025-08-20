@@ -4,6 +4,13 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { useRepoContents } from "@/hooks/useRepoContent";
 import { useRepoDetailInfo } from "@/hooks/useRepoDetailInfo";
 import { useFileContent } from "@/hooks/useRepoFileContent";
@@ -20,8 +27,11 @@ import {
   Wrench,
   BookIcon,
   FlaskConicalIcon,
+  ChevronRightIcon,
 } from "lucide-react";
+
 import { useState } from "react";
+import React from "react";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -63,6 +73,9 @@ export default function RepoDetailPage() {
   const owner = params.owner;
   const repoName = params.repo;
 
+  // 添加状态来跟踪当前路径
+  const [currentPath, setCurrentPath] = useState("");
+
   const {
     repoDetail,
     error: detailError,
@@ -72,6 +85,7 @@ export default function RepoDetailPage() {
     typeof repoName === "string" ? repoName : ""
   );
 
+  // 使用当前路径获取内容
   const {
     contents,
     isLoading: contentsLoading,
@@ -79,7 +93,7 @@ export default function RepoDetailPage() {
   } = useRepoContents(
     typeof owner === "string" ? owner : "",
     typeof repoName === "string" ? repoName : "",
-    "",
+    currentPath,
     { ref: repoDetail?.default_branch }
   );
 
@@ -106,6 +120,46 @@ export default function RepoDetailPage() {
     { value: "password", label: "Files and versions", icon: FolderIcon },
     { value: "test", label: "Test", icon: FlaskConicalIcon },
   ];
+
+  // 处理文件夹点击
+  const handleFolderClick = (folderName: string) => {
+    // 更新当前路径
+    const newPath = currentPath ? `${currentPath}/${folderName}` : folderName;
+    setCurrentPath(newPath);
+  };
+
+  // 处理返回上一级
+  const handleNavigateBack = () => {
+    if (!currentPath) return;
+
+    // 找到最后一个斜杠的位置
+    const lastSlashIndex = currentPath.lastIndexOf("/");
+    if (lastSlashIndex === -1) {
+      // 如果在根目录下的文件夹，返回根目录
+      setCurrentPath("");
+    } else {
+      // 返回上一级目录
+      setCurrentPath(currentPath.substring(0, lastSlashIndex));
+    }
+  };
+
+  // 生成面包屑导航
+  const generateBreadcrumbs = () => {
+    if (!currentPath) return [];
+
+    const parts = currentPath.split("/");
+    const breadcrumbs = [];
+
+    for (let i = 0; i < parts.length; i++) {
+      const path = parts.slice(0, i + 1).join("/");
+      breadcrumbs.push({
+        name: parts[i],
+        path: path,
+      });
+    }
+
+    return breadcrumbs;
+  };
 
   if (detailLoading || contentsLoading) {
     return (
@@ -236,6 +290,55 @@ export default function RepoDetailPage() {
                     default
                   </Badge>
                 </Button>
+
+                {/* 面包屑导航 */}
+                {currentPath && (
+                  <Breadcrumb>
+                    <BreadcrumbList className="text-sm text-muted-foreground">
+                      <BreadcrumbItem>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-1"
+                          onClick={handleNavigateBack}
+                        >
+                          <ArrowLeftIcon className="h-3 w-3 mr-1" />
+                          Back
+                        </Button>
+                      </BreadcrumbItem>
+
+
+                      <BreadcrumbItem>
+                        <BreadcrumbLink asChild>
+                          <button
+                            className="h-6 px-1"
+                            onClick={() => setCurrentPath("")}
+                          >
+                            {repoDetail.name}
+                          </button>
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+
+                      {generateBreadcrumbs().map((breadcrumb, index) => (
+                        <React.Fragment key={index}>
+                          <BreadcrumbSeparator>
+                            <ChevronRightIcon className="h-3 w-3 text-muted-foreground/70" />
+                          </BreadcrumbSeparator>
+                          <BreadcrumbItem>
+                            <BreadcrumbLink asChild>
+                              <button
+                                className="h-6 px-1"
+                                onClick={() => setCurrentPath(breadcrumb.path)}
+                              >
+                                {breadcrumb.name}
+                              </button>
+                            </BreadcrumbLink>
+                          </BreadcrumbItem>
+                        </React.Fragment>
+                      ))}
+                    </BreadcrumbList>
+                  </Breadcrumb>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="gap-1">
@@ -279,7 +382,7 @@ export default function RepoDetailPage() {
 
                     <code className="bg-background px-2 py-1 rounded text-xs text-muted-foreground whitespace-nowrap">
                       {contents && contents.length > 0
-                        ? contents[0].last_commit_sha.substring(0, 7)
+                        ? contents[0].last_commit_sha?.substring(0, 7) || "N/A"
                         : "N/A"}
                     </code>
                   </div>
@@ -292,68 +395,105 @@ export default function RepoDetailPage() {
                 </div>
               ) : !contents || contents.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">
-                  No files found in this repository
+                  No files found in this {currentPath ? "folder" : "repository"}
                 </div>
               ) : (
                 <div className="divide-y">
-                  {contents.map((file) => (
-                    <div
-                      key={file.name}
-                      className="grid grid-cols-[1fr_100px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-6"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        {file.type === "dir" ? (
+                  {/* 首先显示文件夹 */}
+                  {contents
+                    .filter((item) => item.type === "dir")
+                    .map((folder) => (
+                      <div
+                        key={folder.name}
+                        className="grid grid-cols-[1fr_100px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-6 cursor-pointer"
+                        onClick={() => handleFolderClick(folder.name)}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
                           <FolderIcon
                             className="h-4 w-4 text-blue-400"
                             fill="currentColor"
                           />
-                        ) : (
-                          <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        )}
-                        <Button
-                          variant="ghost"
-                          className="p-0 h-auto font-medium text-black hover:text-blue-800 hover:underline text-left truncate"
-                        >
-                          {file.name}
-                        </Button>
-                      </div>
-
-                      <div className="flex items-center justify-center space-x-2">
-                        <div className="text-sm text-muted-foreground/60 text-right w-[60px]">
-                          {file.type === "file" && file.size > 0
-                            ? formatSize(file.size)
-                            : ""}
-                        </div>
-
-                        {file.type === "file" && file.download_url && (
+                          {/* 将div改为Button，保持与文件相同的样式 */}
                           <Button
                             variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 text-muted-foreground/60 hover:text-foreground flex items-center justify-center"
+                            className="p-0 h-auto font-medium text-black hover:text-blue-800 hover:underline text-left truncate"
+                          >
+                            {folder.name}
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className="text-sm text-muted-foreground/60 text-right w-[60px]">
+                            {/* 文件夹不显示大小 */}
+                          </div>
+                        </div>
+
+                        <div className="text-sm text-muted-foreground/60 truncate max-w-md">
+                          Folder
+                        </div>
+
+                        <div className="text-sm text-muted-foreground/60 whitespace-nowrap text-right">
+                          {folder.last_committer_date
+                            ? formatDate(folder.last_committer_date)
+                            : "N/A"}
+                        </div>
+                      </div>
+                    ))}
+                  {/* 然后显示文件 */}
+                  {contents
+                    .filter((item) => item.type === "file")
+                    .map((file) => (
+                      <div
+                        key={file.name}
+                        className="grid grid-cols-[1fr_100px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-6"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <Button
+                            variant="ghost"
+                            className="p-0 h-auto font-medium text-black hover:text-blue-800 hover:underline text-left truncate"
                             onClick={() =>
                               file.download_url &&
                               window.open(file.download_url, "_blank")
                             }
                           >
-                            <DownloadIcon className="h-4 w-4" />
+                            {file.name}
                           </Button>
-                        )}
-                      </div>
+                        </div>
 
-                      <div className="text-sm text-muted-foreground/60 truncate max-w-md">
-                        Latest update
-                      </div>
+                        <div className="flex items-center justify-center space-x-2">
+                          <div className="text-sm text-muted-foreground/60 text-right w-[60px]">
+                            {file.size > 0 ? formatSize(file.size) : ""}
+                          </div>
 
-                      <div className="text-sm text-muted-foreground/60 whitespace-nowrap text-right">
-                        {formatDate(file.last_committer_date)}
+                          {file.download_url && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-muted-foreground/60 hover:text-foreground flex items-center justify-center"
+                              onClick={() => window.open("", "_blank")}
+                            >
+                              <DownloadIcon className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+
+                        <div className="text-sm text-muted-foreground/60 truncate max-w-md">
+                          Latest update
+                        </div>
+
+                        <div className="text-sm text-muted-foreground/60 whitespace-nowrap text-right">
+                          {file.last_committer_date
+                            ? formatDate(file.last_committer_date)
+                            : "N/A"}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </div>
 
-            {hasReadme && (
+            {hasReadme && currentPath === "" && (
               <div className="border rounded-lg overflow-hidden">
                 <div className="bg-muted/50 px-4 py-3 border-b">
                   <div className="flex items-center gap-2">
