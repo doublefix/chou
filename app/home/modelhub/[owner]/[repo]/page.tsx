@@ -28,6 +28,7 @@ import {
   BookIcon,
   FlaskConicalIcon,
   ChevronRightIcon,
+  CodeIcon,
 } from "lucide-react";
 
 import { useState } from "react";
@@ -67,6 +68,105 @@ const decodeBase64 = (base64: string) => {
   }
 };
 
+// 文件类型图标映射
+const fileIcons: Record<string, React.ElementType> = {
+  js: CodeIcon,
+  ts: CodeIcon,
+  jsx: CodeIcon,
+  tsx: CodeIcon,
+  py: CodeIcon,
+  java: CodeIcon,
+  c: CodeIcon,
+  cpp: CodeIcon,
+  html: CodeIcon,
+  css: CodeIcon,
+  json: CodeIcon,
+  md: BookIcon,
+  txt: FileIcon,
+};
+
+const getFileIcon = (fileName: string) => {
+  const extension = fileName.split(".").pop()?.toLowerCase() || "";
+  return fileIcons[extension] || FileIcon;
+};
+
+// 语法高亮组件
+const SyntaxHighlighter = ({
+  content,
+  language,
+}: {
+  content: string;
+  language?: string;
+}) => {
+  return (
+    <pre className="bg-muted p-4 rounded-lg overflow-auto max-h-96">
+      <code
+        className={`language-${
+          language || "text"
+        } text-sm leading-relaxed font-mono block`}
+      >
+        {content}
+      </code>
+    </pre>
+  );
+};
+
+// 文件内容查看器组件
+const FileContentViewer = ({
+  content,
+  isLoading,
+  error,
+  fileName,
+}: {
+  content: any;
+  isLoading: boolean;
+  error: any;
+  fileName: string;
+}) => {
+  if (isLoading) {
+    return (
+      <div className="p-4">
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <div className="text-center text-destructive py-8">
+          Failed to load file: {error.message}
+        </div>
+      </div>
+    );
+  }
+
+  if (content) {
+    const fileContent =
+      content.encoding === "base64" && content.content
+        ? decodeBase64(content.content)
+        : content.content || "No content available";
+
+    const extension = fileName.split(".").pop() || "";
+
+    return (
+      <div className="p-4">
+        <SyntaxHighlighter content={fileContent} language={extension} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <div className="text-center text-muted-foreground py-8">
+        No file content available
+      </div>
+    </div>
+  );
+};
+
 export default function RepoDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -75,6 +175,8 @@ export default function RepoDetailPage() {
 
   // 添加状态来跟踪当前路径
   const [currentPath, setCurrentPath] = useState("");
+  // 添加状态来跟踪当前选中的文件
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   const {
     repoDetail,
@@ -101,14 +203,29 @@ export default function RepoDetailPage() {
     (item) => item.name.toLowerCase() === "readme.md"
   );
 
+  // 获取README文件内容
   const {
-    fileContent,
-    isLoading: fileLoading,
-    error: fileError,
+    fileContent: readmeContent,
+    isLoading: readmeLoading,
+    error: readmeError,
   } = useFileContent(
     typeof owner === "string" ? owner : "",
     typeof repoName === "string" ? repoName : "",
     "README.md",
+    {
+      ref: repoDetail?.default_branch,
+    }
+  );
+
+  // 获取选中的文件内容
+  const {
+    fileContent: selectedFileContent,
+    isLoading: selectedFileLoading,
+    error: selectedFileError,
+  } = useFileContent(
+    typeof owner === "string" ? owner : "",
+    typeof repoName === "string" ? repoName : "",
+    selectedFile || "",
     {
       ref: repoDetail?.default_branch,
     }
@@ -126,39 +243,65 @@ export default function RepoDetailPage() {
     // 更新当前路径
     const newPath = currentPath ? `${currentPath}/${folderName}` : folderName;
     setCurrentPath(newPath);
+    // 清除选中的文件
+    setSelectedFile(null);
+  };
+
+  // 处理文件点击
+  const handleFileClick = (fileName: string) => {
+    // 构建完整文件路径
+    const fullPath = currentPath ? `${currentPath}/${fileName}` : fileName;
+    setSelectedFile(fullPath);
   };
 
   // 处理返回上一级
   const handleNavigateBack = () => {
-    if (!currentPath) return;
-
-    // 找到最后一个斜杠的位置
-    const lastSlashIndex = currentPath.lastIndexOf("/");
-    if (lastSlashIndex === -1) {
-      // 如果在根目录下的文件夹，返回根目录
-      setCurrentPath("");
-    } else {
-      // 返回上一级目录
-      setCurrentPath(currentPath.substring(0, lastSlashIndex));
+    if (selectedFile) {
+      // 如果正在查看文件，返回文件列表
+      setSelectedFile(null);
+    } else if (currentPath) {
+      // 找到最后一个斜杠的位置
+      const lastSlashIndex = currentPath.lastIndexOf("/");
+      if (lastSlashIndex === -1) {
+        // 如果在根目录下的文件夹，返回根目录
+        setCurrentPath("");
+      } else {
+        // 返回上一级目录
+        setCurrentPath(currentPath.substring(0, lastSlashIndex));
+      }
     }
   };
 
   // 生成面包屑导航
   const generateBreadcrumbs = () => {
-    if (!currentPath) return [];
-
-    const parts = currentPath.split("/");
     const breadcrumbs = [];
 
-    for (let i = 0; i < parts.length; i++) {
-      const path = parts.slice(0, i + 1).join("/");
-      breadcrumbs.push({
-        name: parts[i],
-        path: path,
-      });
+    // 添加仓库根目录
+    breadcrumbs.push({
+      name: repoDetail?.name || "",
+      path: "",
+      isRoot: true,
+    });
+
+    // 添加当前路径的各个部分
+    if (currentPath) {
+      const parts = currentPath.split("/");
+      for (let i = 0; i < parts.length; i++) {
+        const path = parts.slice(0, i + 1).join("/");
+        breadcrumbs.push({
+          name: parts[i],
+          path: path,
+        });
+      }
     }
 
     return breadcrumbs;
+  };
+
+  // 获取当前显示的文件名（用于面包屑导航）
+  const getCurrentFileName = () => {
+    if (!selectedFile) return null;
+    return selectedFile.split("/").pop() || "";
   };
 
   if (detailLoading || contentsLoading) {
@@ -292,53 +435,62 @@ export default function RepoDetailPage() {
                 </Button>
 
                 {/* 面包屑导航 */}
-                {currentPath && (
-                  <Breadcrumb>
-                    <BreadcrumbList className="text-sm text-muted-foreground">
-                      <BreadcrumbItem>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-1"
-                          onClick={handleNavigateBack}
-                        >
-                          <ArrowLeftIcon className="h-3 w-3 mr-1" />
-                          Back
-                        </Button>
-                      </BreadcrumbItem>
+                <Breadcrumb>
+                  <BreadcrumbList className="text-sm text-muted-foreground">
+                    <BreadcrumbItem>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-1"
+                        onClick={handleNavigateBack}
+                        disabled={!currentPath && !selectedFile}
+                      >
+                        <ArrowLeftIcon className="h-3 w-3 mr-1" />
+                        Back
+                      </Button>
+                    </BreadcrumbItem>
 
+                    {generateBreadcrumbs().map((breadcrumb, index, array) => (
+                      <React.Fragment key={index}>
+                        <BreadcrumbSeparator>
+                          <ChevronRightIcon className="h-3 w-3 text-muted-foreground/70" />
+                        </BreadcrumbSeparator>
+                        <BreadcrumbItem>
+                          <BreadcrumbLink asChild>
+                            <button
+                              className="h-6 px-1"
+                              onClick={() => {
+                                if (breadcrumb.isRoot) {
+                                  setCurrentPath("");
+                                  setSelectedFile(null);
+                                } else {
+                                  setCurrentPath(breadcrumb.path);
+                                  setSelectedFile(null);
+                                }
+                              }}
+                            >
+                              {breadcrumb.name}
+                            </button>
+                          </BreadcrumbLink>
+                        </BreadcrumbItem>
+                      </React.Fragment>
+                    ))}
 
-                      <BreadcrumbItem>
-                        <BreadcrumbLink asChild>
-                          <button
-                            className="h-6 px-1"
-                            onClick={() => setCurrentPath("")}
-                          >
-                            {repoDetail.name}
-                          </button>
-                        </BreadcrumbLink>
-                      </BreadcrumbItem>
-
-                      {generateBreadcrumbs().map((breadcrumb, index) => (
-                        <React.Fragment key={index}>
-                          <BreadcrumbSeparator>
-                            <ChevronRightIcon className="h-3 w-3 text-muted-foreground/70" />
-                          </BreadcrumbSeparator>
-                          <BreadcrumbItem>
-                            <BreadcrumbLink asChild>
-                              <button
-                                className="h-6 px-1"
-                                onClick={() => setCurrentPath(breadcrumb.path)}
-                              >
-                                {breadcrumb.name}
-                              </button>
-                            </BreadcrumbLink>
-                          </BreadcrumbItem>
-                        </React.Fragment>
-                      ))}
-                    </BreadcrumbList>
-                  </Breadcrumb>
-                )}
+                    {/* 显示当前选中的文件名 */}
+                    {selectedFile && (
+                      <>
+                        <BreadcrumbSeparator>
+                          <ChevronRightIcon className="h-3 w-3 text-muted-foreground/70" />
+                        </BreadcrumbSeparator>
+                        <BreadcrumbItem>
+                          <span className="h-6 px-1 text-foreground font-medium">
+                            {getCurrentFileName()}
+                          </span>
+                        </BreadcrumbItem>
+                      </>
+                    )}
+                  </BreadcrumbList>
+                </Breadcrumb>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="gap-1">
@@ -389,7 +541,14 @@ export default function RepoDetailPage() {
                 </div>
               </div>
 
-              {contentsError ? (
+              {selectedFile ? (
+                <FileContentViewer
+                  content={selectedFileContent}
+                  isLoading={selectedFileLoading}
+                  error={selectedFileError}
+                  fileName={selectedFile}
+                />
+              ) : contentsError ? (
                 <div className="p-4 text-center text-destructive">
                   Failed to load repository contents: {contentsError.message}
                 </div>
@@ -413,7 +572,6 @@ export default function RepoDetailPage() {
                             className="h-4 w-4 text-blue-400"
                             fill="currentColor"
                           />
-                          {/* 将div改为Button，保持与文件相同的样式 */}
                           <Button
                             variant="ghost"
                             className="p-0 h-auto font-medium text-black hover:text-blue-800 hover:underline text-left truncate"
@@ -439,23 +597,20 @@ export default function RepoDetailPage() {
                         </div>
                       </div>
                     ))}
-                  {/* 然后显示文件 */}
+                  {/* 然后显示文件 - 使用与文件夹相同的样式 */}
                   {contents
                     .filter((item) => item.type === "file")
                     .map((file) => (
                       <div
                         key={file.name}
-                        className="grid grid-cols-[1fr_100px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-6"
+                        className="grid grid-cols-[1fr_100px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-6 cursor-pointer"
+                        onClick={() => handleFileClick(file.name)}
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           <Button
                             variant="ghost"
                             className="p-0 h-auto font-medium text-black hover:text-blue-800 hover:underline text-left truncate"
-                            onClick={() =>
-                              file.download_url &&
-                              window.open(file.download_url, "_blank")
-                            }
                           >
                             {file.name}
                           </Button>
@@ -471,7 +626,10 @@ export default function RepoDetailPage() {
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0 text-muted-foreground/60 hover:text-foreground flex items-center justify-center"
-                              onClick={() => window.open("", "_blank")}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open("", "_blank");
+                              }}
                             >
                               <DownloadIcon className="h-4 w-4" />
                             </Button>
@@ -493,7 +651,7 @@ export default function RepoDetailPage() {
               )}
             </div>
 
-            {hasReadme && currentPath === "" && (
+            {hasReadme && currentPath === "" && !selectedFile && (
               <div className="border rounded-lg overflow-hidden">
                 <div className="bg-muted/50 px-4 py-3 border-b">
                   <div className="flex items-center gap-2">
@@ -502,21 +660,21 @@ export default function RepoDetailPage() {
                   </div>
                 </div>
                 <div className="p-6">
-                  {fileLoading ? (
+                  {readmeLoading ? (
                     <div className="flex justify-center py-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
-                  ) : fileError ? (
+                  ) : readmeError ? (
                     <div className="text-center text-destructive py-8">
-                      Failed to load README: {fileError.message}
+                      Failed to load README: {readmeError.message}
                     </div>
-                  ) : fileContent ? (
+                  ) : readmeContent ? (
                     <div className="prose prose-sm max-w-none dark:prose-invert">
                       <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-                        {fileContent.encoding === "base64" &&
-                        fileContent.content
-                          ? decodeBase64(fileContent.content)
-                          : fileContent.content || "No content available"}
+                        {readmeContent.encoding === "base64" &&
+                        readmeContent.content
+                          ? decodeBase64(readmeContent.content)
+                          : readmeContent.content || "No content available"}
                       </pre>
                     </div>
                   ) : (
