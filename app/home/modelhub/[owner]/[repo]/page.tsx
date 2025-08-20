@@ -269,7 +269,6 @@ export default function RepoDetailPage() {
   const { repo, loading } = useRepoDetail(id);
 
   const [activeTab, setActiveTab] = useState("account");
-
   const tabs = [
     { value: "account", label: "README", icon: BookIcon },
     { value: "password", label: "Files and versions", icon: FolderIcon },
