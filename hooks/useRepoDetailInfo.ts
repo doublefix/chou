@@ -1,34 +1,64 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
 
-// 定义仓库详情数据类型（基于提供的 JSON 响应）
+export interface User {
+  id: number;
+  login: string;
+  login_name: string;
+  source_id: number;
+  full_name: string;
+  email: string;
+  avatar_url: string;
+  html_url: string;
+  language: string;
+  is_admin: boolean;
+  last_login: string;
+  created: string;
+  restricted: boolean;
+  active: boolean;
+  prohibit_login: boolean;
+  location: string;
+  website: string;
+  description: string;
+  visibility: string;
+  followers_count: number;
+  following_count: number;
+  starred_repos_count: number;
+  username: string;
+}
+
+export interface Permission {
+  admin: boolean;
+  push: boolean;
+  pull: boolean;
+}
+
+export interface InternalTracker {
+  enable_time_tracker: boolean;
+  allow_only_contributors_to_track_time: boolean;
+  enable_issue_dependencies: boolean;
+}
+
+export interface ExternalTracker {
+  external_tracker_url?: string;
+  external_tracker_format?: string;
+  external_tracker_style?: string;
+}
+
+export interface ExternalWiki {
+  external_wiki_url?: string;
+}
+
+export interface RepoTransfer {
+  doer?: User;
+  recipient?: User;
+  teams?: any[];
+  created?: string;
+}
+
 export interface RepoDetail {
   id: number;
-  owner: {
-    id: number;
-    login: string;
-    login_name: string;
-    source_id: number;
-    full_name: string;
-    email: string;
-    avatar_url: string;
-    html_url: string;
-    language: string;
-    is_admin: boolean;
-    last_login: string;
-    created: string;
-    restricted: boolean;
-    active: boolean;
-    prohibit_login: boolean;
-    location: string;
-    website: string;
-    description: string;
-    visibility: string;
-    followers_count: number;
-    following_count: number;
-    starred_repos_count: number;
-    username: string;
-  };
+  owner: User;
   name: string;
   full_name: string;
   description: string;
@@ -36,7 +66,7 @@ export interface RepoDetail {
   private: boolean;
   fork: boolean;
   template: boolean;
-  parent: any; // 根据实际情况可以定义更具体的类型
+  parent: RepoDetail | null;
   mirror: boolean;
   size: number;
   language: string;
@@ -59,17 +89,9 @@ export interface RepoDetail {
   created_at: string;
   updated_at: string;
   archived_at: string;
-  permissions: {
-    admin: boolean;
-    push: boolean;
-    pull: boolean;
-  };
+  permissions: Permission;
   has_issues: boolean;
-  internal_tracker: {
-    enable_time_tracker: boolean;
-    allow_only_contributors_to_track_time: boolean;
-    enable_issue_dependencies: boolean;
-  };
+  internal_tracker: InternalTracker;
   has_wiki: boolean;
   has_pull_requests: boolean;
   has_projects: boolean;
@@ -90,17 +112,25 @@ export interface RepoDetail {
   avatar_url: string;
   internal: boolean;
   mirror_interval: string;
-  object_format_name: string;
+  object_format_name: "sha1" | "sha256";
   mirror_updated: string;
-  repo_transfer: any; // 根据实际情况可以定义更具体的类型
+  repo_transfer: RepoTransfer | null;
   topics: string[];
-  licenses: any; // 根据实际情况可以定义更具体的类型
+  licenses: string[];
+  external_tracker?: ExternalTracker;
+  external_wiki?: ExternalWiki;
 }
 
 export function useRepoDetailInfo(owner: string, repoName: string) {
-  const { data, error, isLoading, mutate } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR<{ data: RepoDetail }>(
     owner && repoName ? `/api/v1/repos/${owner}/${repoName}` : null,
-    fetcher
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: (error: any) => {
+        return error?.status !== 404;
+      },
+    }
   );
 
   const repoDetail: RepoDetail | null = data?.data || null;
@@ -109,6 +139,7 @@ export function useRepoDetailInfo(owner: string, repoName: string) {
     repoDetail,
     error,
     isLoading,
+    isNotFound: error?.status === 404,
     mutate,
   };
 }
