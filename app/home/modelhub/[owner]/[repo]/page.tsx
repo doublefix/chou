@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRepoContents } from "@/hooks/useRepoContent";
 import { useRepoDetailInfo } from "@/hooks/useRepoDetailInfo";
+import { useFileContent } from "@/hooks/useRepoFileContent";
 import {
   StarIcon,
   GitBranchIcon,
@@ -213,13 +214,26 @@ export default function RepoDetailPage() {
 
   const {
     contents,
-    isLoading,
+    isLoading: contentsLoading,
     error: contentsError,
   } = useRepoContents(
     typeof owner === "string" ? owner : "",
     typeof repoName === "string" ? repoName : "",
     ".dvc",
     { ref: repoDetail?.default_branch }
+  );
+
+  const {
+    fileContent,
+    isLoading: fileLoading,
+    error,
+  } = useFileContent(
+    typeof owner === "string" ? owner : "",
+    typeof repoName === "string" ? repoName : "",
+    "README.md",
+    {
+      ref: repoDetail?.default_branch,
+    }
   );
 
   const [activeTab, setActiveTab] = useState("account");
