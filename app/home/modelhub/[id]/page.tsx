@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRepoContents } from "@/hooks/useRepoContent";
-import { getRepoInfo } from "@/hooks/useRepoInfo";
+import { useRepoDetailInfo } from "@/hooks/useRepoDetailInfo";
 import {
   StarIcon,
   GitBranchIcon,
@@ -272,14 +272,14 @@ export default function RepoDetailPage() {
     { value: "test", label: "Test", icon: FlaskConicalIcon },
   ];
 
-  const { contents, isLoading, error } = useRepoContents(
+  const { contents, isLoading, error: contentsError } = useRepoContents(
     "admin",
     "opus-mt-en-fr-test-upload",
     ".dvc",
     { ref: "main" }
   );
 
-  // const repoInfo = getRepoInfo("admin", "opus-mt-en-fr-test-upload");
+  const { repoDetail, error: detailError, isLoading: detailLoading } = useRepoDetailInfo("admin", "opus-mt-en-fr-test-upload");
 
 
   if (loading) {
