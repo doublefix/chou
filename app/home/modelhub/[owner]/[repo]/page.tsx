@@ -262,8 +262,12 @@ const formatSize = (bytes: number) => {
 export default function RepoDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const owner = params.owner;
+  const repoName = params.repo;
+
+  const id = "1";
   const { repo, loading } = useRepoDetail(id);
+
   const [activeTab, setActiveTab] = useState("account");
 
   const tabs = [
@@ -272,15 +276,25 @@ export default function RepoDetailPage() {
     { value: "test", label: "Test", icon: FlaskConicalIcon },
   ];
 
-  const { contents, isLoading, error: contentsError } = useRepoContents(
-    "admin",
-    "opus-mt-en-fr-test-upload",
+  const {
+    contents,
+    isLoading,
+    error: contentsError,
+  } = useRepoContents(
+    typeof owner === "string" ? owner : "",
+    typeof repoName === "string" ? repoName : "",
     ".dvc",
     { ref: "main" }
   );
 
-  const { repoDetail, error: detailError, isLoading: detailLoading } = useRepoDetailInfo("admin", "opus-mt-en-fr-test-upload");
-
+  const {
+    repoDetail,
+    error: detailError,
+    isLoading: detailLoading,
+  } = useRepoDetailInfo(
+    typeof owner === "string" ? owner : "",
+    typeof repoName === "string" ? repoName : ""
+  );
 
   if (loading) {
     return (

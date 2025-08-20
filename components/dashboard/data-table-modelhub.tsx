@@ -738,7 +738,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
 
   const handleClick = () => {
     // 跳转到项目详情页
-    router.push(`/home/modelhub/${item.id}`);
+    router.push(`/home/modelhub/${item.owner.login}/${item.name}`);
   };
 
   return (
