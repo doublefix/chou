@@ -11,7 +11,6 @@ import {
   StarIcon,
   GitBranchIcon,
   ArrowLeftIcon,
-  EyeIcon,
   GitForkIcon,
   DownloadIcon,
   FileIcon,
@@ -22,155 +21,7 @@ import {
   BookIcon,
   FlaskConicalIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-
-type Repo = {
-  id: number;
-  name: string;
-  full_name: string;
-  description: string;
-  owner: {
-    id: number;
-    login: string;
-    avatar_url: string;
-  };
-  stars_count: number;
-  forks_count: number;
-  watchers_count: number;
-  created_at: string;
-  updated_at: string;
-  archived: boolean;
-  private: boolean;
-  default_branch: string;
-  language: string;
-  license: string;
-  topics: string[];
-  homepage: string;
-  clone_url: string;
-  latest_commit: {
-    sha: string;
-    message: string;
-    author: string;
-    date: string;
-  };
-};
-
-type FileItem = {
-  name: string;
-  type: "file" | "dir";
-  size?: string;
-  last_commit: {
-    message: string;
-    date: string;
-  };
-};
-
-const mockFiles: FileItem[] = [
-  {
-    name: ".github",
-    type: "dir",
-    last_commit: {
-      message: "Add GitHub workflows",
-      date: "2024-01-15",
-    },
-  },
-  {
-    name: "src",
-    type: "dir",
-    last_commit: {
-      message: "Refactor source code structure",
-      date: "2024-01-20",
-    },
-  },
-  {
-    name: "public",
-    type: "dir",
-    last_commit: {
-      message: "Update assets",
-      date: "2024-01-18",
-    },
-  },
-  {
-    name: ".gitignore",
-    type: "file",
-    size: "1.2 KB",
-    last_commit: {
-      message: "Update gitignore",
-      date: "2024-01-10",
-    },
-  },
-  {
-    name: "README.md",
-    type: "file",
-    size: "4.5 KB",
-    last_commit: {
-      message: "Update documentation",
-      date: "2024-01-22",
-    },
-  },
-  {
-    name: "package.json",
-    type: "file",
-    size: "2.1 KB",
-    last_commit: {
-      message: "Update dependencies",
-      date: "2024-01-21",
-    },
-  },
-  {
-    name: "tsconfig.json",
-    type: "file",
-    size: "856 B",
-    last_commit: {
-      message: "Update TypeScript config",
-      date: "2024-01-19",
-    },
-  },
-];
-
-const mockReadme = `# Example Repository
-
-This is an example repository showcasing a modern web application built with Next.js and TypeScript.
-
-## 🚀 Features
-
-- **Modern Stack**: Built with Next.js 14, TypeScript, and Tailwind CSS
-- **Responsive Design**: Works perfectly on all devices
-- **Performance Optimized**: Fast loading and smooth interactions
-- **Developer Experience**: Hot reloading, TypeScript support, and more
-
-## 📦 Installation
-
-\`\`\`bash
-# Clone the repository
-git clone https://github.com/user/example-repo.git
-
-# Install dependencies
-npm install
-
-# Start the development server
-npm run dev
-\`\`\`
-
-## 🛠️ Usage
-
-Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
-
-## 📝 Scripts
-
-- \`npm run dev\` - Start development server
-- \`npm run build\` - Build for production
-- \`npm run start\` - Start production server
-- \`npm run lint\` - Run ESLint
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-`;
+import { useState } from "react";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -197,6 +48,15 @@ const formatSize = (bytes: number) => {
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 };
 
+const decodeBase64 = (base64: string) => {
+  try {
+    return atob(base64);
+  } catch (error) {
+    console.error("Failed to decode base64 content:", error);
+    return "Unable to decode file content";
+  }
+};
+
 export default function RepoDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -219,14 +79,18 @@ export default function RepoDetailPage() {
   } = useRepoContents(
     typeof owner === "string" ? owner : "",
     typeof repoName === "string" ? repoName : "",
-    ".dvc",
+    "",
     { ref: repoDetail?.default_branch }
+  );
+
+  const hasReadme = contents?.some(
+    (item) => item.name.toLowerCase() === "readme.md"
   );
 
   const {
     fileContent,
     isLoading: fileLoading,
-    error,
+    error: fileError,
   } = useFileContent(
     typeof owner === "string" ? owner : "",
     typeof repoName === "string" ? repoName : "",
@@ -243,7 +107,7 @@ export default function RepoDetailPage() {
     { value: "test", label: "Test", icon: FlaskConicalIcon },
   ];
 
-  if (detailLoading) {
+  if (detailLoading || contentsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -270,7 +134,6 @@ export default function RepoDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container px-4 sm:px-6 lg:px-10 py-6">
           <div className="mb-4">
@@ -283,7 +146,6 @@ export default function RepoDetailPage() {
             </div>
           </div>
 
-          {/* Repository Header */}
           <div className="flex flex-col gap-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -298,7 +160,6 @@ export default function RepoDetailPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm">
                   <StarIcon className="h-4 w-4 mr-1" />
@@ -321,7 +182,6 @@ export default function RepoDetailPage() {
               {repoDetail.description || "No description provided"}
             </p>
 
-            {/* Topics and Links */}
             {repoDetail.topics && repoDetail.topics.length > 0 && (
               <div className="flex flex-wrap items-center gap-3">
                 {repoDetail.topics.map((topic) => (
@@ -339,7 +199,6 @@ export default function RepoDetailPage() {
         </div>
 
         <div className="container px-4 sm:px-6 lg:px-10">
-          {/* Tabs */}
           <div className="flex relative z-10">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -365,12 +224,9 @@ export default function RepoDetailPage() {
         <div className="border-t border-gray-200 mb-2" />
       </div>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-10 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Main Content */}
           <div className="lg:col-span-3 space-y-4">
-            {/* Branch and Clone */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm" className="gap-1">
@@ -397,7 +253,6 @@ export default function RepoDetailPage() {
               </div>
             </div>
 
-            {/* File Browser */}
             <div className="border rounded-lg overflow-hidden">
               <div className="bg-muted/50 px-4 py-3 border-b">
                 <div className="flex items-center justify-between w-full gap-3">
@@ -410,7 +265,6 @@ export default function RepoDetailPage() {
 
                     <div className="flex-1 min-w-0 overflow-hidden">
                       <p className="text-sm font-medium truncate">
-                        {/* 这里使用模拟的提交信息，实际应该从接口获取 */}
                         Latest commit on {repoDetail.default_branch}
                       </p>
                     </div>
@@ -424,84 +278,115 @@ export default function RepoDetailPage() {
                     </div>
 
                     <code className="bg-background px-2 py-1 rounded text-xs text-muted-foreground whitespace-nowrap">
-                      {/* 这里使用模拟的commit sha，实际应该从接口获取 */}
-                      a1b2c3d
+                      {contents && contents.length > 0
+                        ? contents[0].last_commit_sha.substring(0, 7)
+                        : "N/A"}
                     </code>
                   </div>
                 </div>
               </div>
-              <div className="divide-y">
-                {mockFiles.map((file) => (
-                  <div
-                    key={file.name}
-                    className="grid grid-cols-[1fr_100px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-6"
-                  >
-                    {/* 列 1：文件/文件夹图标和名称 */}
-                    <div className="flex items-center gap-2 min-w-0">
-                      {file.type === "dir" ? (
-                        <FolderIcon
-                          className="h-4 w-4 text-blue-400"
-                          fill="currentColor"
-                        />
-                      ) : (
-                        <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      )}
-                      <Button
-                        variant="ghost"
-                        className="p-0 h-auto font-medium text-black hover:text-blue-800 hover:underline text-left truncate"
-                      >
-                        {file.name}
-                      </Button>
-                    </div>
 
-                    <div className="flex items-center justify-center space-x-2">
-                      {/* 固定宽度，右对齐 */}
-                      <div className="text-sm text-muted-foreground/60 text-right w-[60px]">
-                        {file.size || ""}
-                      </div>
-
-                      {/* 下载按钮 */}
-                      {file.type === "file" && (
+              {contentsError ? (
+                <div className="p-4 text-center text-destructive">
+                  Failed to load repository contents: {contentsError.message}
+                </div>
+              ) : !contents || contents.length === 0 ? (
+                <div className="p-4 text-center text-muted-foreground">
+                  No files found in this repository
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {contents.map((file) => (
+                    <div
+                      key={file.name}
+                      className="grid grid-cols-[1fr_100px_1fr_150px] items-center px-4 py-3 hover:bg-muted/30 transition-colors gap-6"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {file.type === "dir" ? (
+                          <FolderIcon
+                            className="h-4 w-4 text-blue-400"
+                            fill="currentColor"
+                          />
+                        ) : (
+                          <FileIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        )}
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-muted-foreground/60 hover:text-foreground flex items-center justify-center"
+                          className="p-0 h-auto font-medium text-black hover:text-blue-800 hover:underline text-left truncate"
                         >
-                          <DownloadIcon className="h-4 w-4" />
+                          {file.name}
                         </Button>
-                      )}
-                    </div>
+                      </div>
 
-                    {/* 列 4：提交信息 */}
-                    <div className="text-sm text-muted-foreground/60 truncate max-w-md">
-                      {file.last_commit.message}
-                    </div>
+                      <div className="flex items-center justify-center space-x-2">
+                        <div className="text-sm text-muted-foreground/60 text-right w-[60px]">
+                          {file.type === "file" && file.size > 0
+                            ? formatSize(file.size)
+                            : ""}
+                        </div>
 
-                    {/* 列 5：更新时间 */}
-                    <div className="text-sm text-muted-foreground/60 whitespace-nowrap text-right">
-                      {formatDate(file.last_commit.date)}
+                        {file.type === "file" && file.download_url && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-muted-foreground/60 hover:text-foreground flex items-center justify-center"
+                            onClick={() =>
+                              file.download_url &&
+                              window.open(file.download_url, "_blank")
+                            }
+                          >
+                            <DownloadIcon className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="text-sm text-muted-foreground/60 truncate max-w-md">
+                        Latest update
+                      </div>
+
+                      <div className="text-sm text-muted-foreground/60 whitespace-nowrap text-right">
+                        {formatDate(file.last_committer_date)}
+                      </div>
                     </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {hasReadme && (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="bg-muted/50 px-4 py-3 border-b">
+                  <div className="flex items-center gap-2">
+                    <BookOpenIcon className="h-4 w-4" />
+                    <span className="font-medium">README.md</span>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* README */}
-            <div className="border rounded-lg overflow-hidden">
-              <div className="bg-muted/50 px-4 py-3 border-b">
-                <div className="flex items-center gap-2">
-                  <BookOpenIcon className="h-4 w-4" />
-                  <span className="font-medium">README.md</span>
+                </div>
+                <div className="p-6">
+                  {fileLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : fileError ? (
+                    <div className="text-center text-destructive py-8">
+                      Failed to load README: {fileError.message}
+                    </div>
+                  ) : fileContent ? (
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <pre className="whitespace-pre-wrap text-sm leading-relaxed">
+                        {fileContent.encoding === "base64" &&
+                        fileContent.content
+                          ? decodeBase64(fileContent.content)
+                          : fileContent.content || "No content available"}
+                      </pre>
+                    </div>
+                  ) : (
+                    <div className="text-center text-muted-foreground py-8">
+                      No README content available
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="p-6">
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  <pre className="whitespace-pre-wrap text-sm leading-relaxed">
-                    {mockReadme}
-                  </pre>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
