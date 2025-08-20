@@ -277,6 +277,15 @@ export default function RepoDetailPage() {
   ];
 
   const {
+    repoDetail,
+    error: detailError,
+    isLoading: detailLoading,
+  } = useRepoDetailInfo(
+    typeof owner === "string" ? owner : "",
+    typeof repoName === "string" ? repoName : ""
+  );
+
+  const {
     contents,
     isLoading,
     error: contentsError,
@@ -284,16 +293,7 @@ export default function RepoDetailPage() {
     typeof owner === "string" ? owner : "",
     typeof repoName === "string" ? repoName : "",
     ".dvc",
-    { ref: "main" }
-  );
-
-  const {
-    repoDetail,
-    error: detailError,
-    isLoading: detailLoading,
-  } = useRepoDetailInfo(
-    typeof owner === "string" ? owner : "",
-    typeof repoName === "string" ? repoName : ""
+    { ref: repoDetail?.default_branch }
   );
 
   if (loading) {
