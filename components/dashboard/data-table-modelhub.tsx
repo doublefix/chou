@@ -269,7 +269,6 @@ export function DataTable({
         </div>
       </div>
 
-
       {/* 修改 Archived Status 部分为 Badge 样式 */}
       <div className="space-y-3">
         <Label>Archived Status</Label>
@@ -310,7 +309,6 @@ export function DataTable({
           </Badge>
         </div>
       </div>
-
 
       {/* 修改 Visibility 部分为 Badge 样式 */}
       <div className="space-y-3">
@@ -401,83 +399,6 @@ export function DataTable({
               </Button>
             </div>
           </div>
-          {(filters.search ||
-            filters.owners.length > 0 ||
-            filters.archived !== null ||
-            filters.private !== null) && (
-            <div className="px-4 lg:px-6">
-              <div className="flex flex-wrap gap-2">
-                {filters.search && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    Search: {filters.search}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 p-0"
-                      onClick={() => handleFilterChange("search", "")}
-                    >
-                      <XIcon className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                )}
-
-                {filters.owners.map((owner) => (
-                  <Badge
-                    key={`badge-owner-${owner}`}
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    Owner: {owner}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 p-0"
-                      onClick={() => toggleOwnerFilter(owner)}
-                    >
-                      <XIcon className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                ))}
-
-                {filters.archived !== null && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    {filters.archived ? "Archived" : "Active"}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 p-0"
-                      onClick={() => handleFilterChange("archived", null)}
-                    >
-                      <XIcon className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                )}
-
-                {filters.private !== null && (
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    {filters.private ? "Private" : "Public"}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 p-0"
-                      onClick={() => handleFilterChange("private", null)}
-                    >
-                      <XIcon className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
 
           <TabsContent
             value="outline"
