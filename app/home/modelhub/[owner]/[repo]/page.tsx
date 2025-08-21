@@ -516,37 +516,45 @@ export default function RepoDetailPage() {
 
             <div className="border rounded-lg overflow-hidden">
               <div className="bg-muted/50 px-4 py-3 border-b">
-                <div className="flex items-center justify-between w-full gap-3">
-                  <div className="flex items-center gap-3 flex-1">
-                    <Avatar className="h-4 w-4 flex-shrink-0">
-                      <AvatarFallback>
-                        {repoDetail.owner.login.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                <div className="flex items-center w-full gap-3">
+                  {/* 行首：头像 */}
+                  <Avatar className="h-6 w-6 flex-shrink-0">
+                    <AvatarFallback className="text-[12px]">
+                      {lastCommit?.committer?.username
+                        ?.charAt(0)
+                        .toUpperCase() ||
+                        repoDetail.owner.login.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
 
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <p className="text-sm font-medium truncate">
-                        Latest commit on {repoDetail.default_branch}
-                      </p>
-                    </div>
-                  </div>
+                  {/* 用户名 */}
+                  <p className="text-sm font-medium truncate max-w-[120px]">
+                    {lastCommit?.committer?.username || repoDetail.owner.login}
+                  </p>
 
-                  <div className="flex items-center gap-4">
-                    <div className="text-xs text-muted-foreground whitespace-nowrap">
-                      <span>{repoDetail.owner.login}</span>
-                      <span className="mx-1">•</span>
-                      <span>updated {formatDate(repoDetail.updated_at)}</span>
-                    </div>
-
-                    <code className="bg-background px-2 py-1 rounded text-xs text-muted-foreground whitespace-nowrap">
-                      {contents && contents.length > 0
-                        ? contents[0].last_commit_sha?.substring(0, 7) || "N/A"
-                        : "N/A"}
+                  {/* 提交信息 + commit号 */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <p className="text-xs text-muted-foreground truncate">
+                      {lastCommit?.message ||
+                        `Latest commit on ${repoDetail.default_branch}`}
+                    </p>
+                    <code className="bg-background px-2 py-0.5 rounded text-xs text-muted-foreground whitespace-nowrap">
+                      {lastCommit?.id?.substring(0, 7) ||
+                        (contents && contents.length > 0
+                          ? contents[0].last_commit_sha?.substring(0, 7) ||
+                            "N/A"
+                          : "N/A")}
                     </code>
                   </div>
+
+                  {/* 行尾：时间 */}
+                  {lastCommit?.timestamp && (
+                    <div className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDate(lastCommit.timestamp)}
+                    </div>
+                  )}
                 </div>
               </div>
-
               {selectedFile ? (
                 <FileContentViewer
                   content={selectedFileContent}
