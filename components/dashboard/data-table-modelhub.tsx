@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   ColumnDef,
   ColumnFiltersState,
-  Row,
   SortingState,
   VisibilityState,
   flexRender,
@@ -19,26 +18,16 @@ import {
 } from "@tanstack/react-table";
 import { StarIcon, GitBranchIcon } from "lucide-react";
 import {
-  CheckCircle2Icon,
-  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
-  ColumnsIcon,
   FilterIcon,
-  LoaderIcon,
-  MoreVerticalIcon,
   PlusIcon,
-  SlidersHorizontalIcon,
-  TrendingUpIcon,
   XIcon,
 } from "lucide-react";
-import { Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-import { toast } from "sonner";
 import { z } from "zod";
 
 import { useIsMobile } from "@/components/ui/hooks/use-mobile";
