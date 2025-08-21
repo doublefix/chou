@@ -245,98 +245,115 @@ export function DataTable({
         </Button>
       </div>
 
+      {/* 修改 Owners 部分为 Badge 样式 */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label>Owners</Label>
-          <Badge variant="outline" className="h-6 px-1.5 text-xs">
-            {filters.owners.length}
-          </Badge>
-        </div>
-        <div className="space-y-2">
+        <Label>Owners</Label>
+        <div className="flex flex-wrap gap-2">
           {uniqueOwners.map((owner) => (
-            <div key={owner} className="flex items-center space-x-2">
-              <Checkbox
-                id={`owner-${owner}`}
-                checked={filters.owners.includes(owner)}
-                onCheckedChange={() => toggleOwnerFilter(owner)}
-              />
-              <Label
-                htmlFor={`owner-${owner}`}
-                className="text-sm font-normal leading-none"
-              >
-                {owner}
-              </Label>
-            </div>
+            <Badge
+              key={owner}
+              variant="outline"
+              className={`cursor-pointer gap-1 px-2 py-1 transition-all ${
+                filters.owners.includes(owner)
+                  ? "border-2 border-primary font-medium"
+                  : "border-muted-foreground/30"
+              }`}
+              onClick={() => toggleOwnerFilter(owner)}
+            >
+              {owner}
+              {filters.owners.includes(owner) && (
+                <XIcon className="h-3 w-3 ml-1" />
+              )}
+            </Badge>
           ))}
         </div>
       </div>
 
-      <Separator />
 
+      {/* 修改 Archived Status 部分为 Badge 样式 */}
       <div className="space-y-3">
         <Label>Archived Status</Label>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="archived-true"
-              checked={filters.archived === true}
-              onCheckedChange={(checked) =>
-                handleFilterChange("archived", checked ? true : null)
-              }
-            />
-            <Label htmlFor="archived-true" className="text-sm font-normal">
-              Archived
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="archived-false"
-              checked={filters.archived === false}
-              onCheckedChange={(checked) =>
-                handleFilterChange("archived", checked ? false : null)
-              }
-            />
-            <Label htmlFor="archived-false" className="text-sm font-normal">
-              Active
-            </Label>
-          </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge
+            variant="outline"
+            className={`cursor-pointer gap-1 px-2 py-1 transition-all ${
+              filters.archived === true
+                ? "border-2 border-primary font-medium"
+                : "border-muted-foreground/30"
+            }`}
+            onClick={() =>
+              handleFilterChange(
+                "archived",
+                filters.archived === true ? null : true
+              )
+            }
+          >
+            Archived
+            {filters.archived === true && <XIcon className="h-3 w-3 ml-1" />}
+          </Badge>
+          <Badge
+            variant="outline"
+            className={`cursor-pointer gap-1 px-2 py-1 transition-all ${
+              filters.archived === false
+                ? "border-2 border-primary font-medium"
+                : "border-muted-foreground/30"
+            }`}
+            onClick={() =>
+              handleFilterChange(
+                "archived",
+                filters.archived === false ? null : false
+              )
+            }
+          >
+            Active
+            {filters.archived === false && <XIcon className="h-3 w-3 ml-1" />}
+          </Badge>
         </div>
       </div>
 
-      <Separator />
 
+      {/* 修改 Visibility 部分为 Badge 样式 */}
       <div className="space-y-3">
         <Label>Visibility</Label>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="private-true"
-              checked={filters.private === true}
-              onCheckedChange={(checked) =>
-                handleFilterChange("private", checked ? true : null)
-              }
-            />
-            <Label htmlFor="private-true" className="text-sm font-normal">
-              Private
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="private-false"
-              checked={filters.private === false}
-              onCheckedChange={(checked) =>
-                handleFilterChange("private", checked ? false : null)
-              }
-            />
-            <Label htmlFor="private-false" className="text-sm font-normal">
-              Public
-            </Label>
-          </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge
+            variant="outline"
+            className={`cursor-pointer gap-1 px-2 py-1 transition-all ${
+              filters.private === true
+                ? "border-2 border-primary font-medium"
+                : "border-muted-foreground/30"
+            }`}
+            onClick={() =>
+              handleFilterChange(
+                "private",
+                filters.private === true ? null : true
+              )
+            }
+          >
+            Private
+            {filters.private === true && <XIcon className="h-3 w-3 ml-1" />}
+          </Badge>
+          <Badge
+            variant="outline"
+            className={`cursor-pointer gap-1 px-2 py-1 transition-all ${
+              filters.private === false
+                ? "border-2 border-primary font-medium"
+                : "border-muted-foreground/30"
+            }`}
+            onClick={() =>
+              handleFilterChange(
+                "private",
+                filters.private === false ? null : false
+              )
+            }
+          >
+            Public
+            {filters.private === false && <XIcon className="h-3 w-3 ml-1" />}
+          </Badge>
         </div>
       </div>
     </div>
   );
-
   return (
     <div className="flex flex-col lg:flex-row w-full">
       <div className="hidden lg:block w-96 ml-4 rounded-lg shrink-0">
