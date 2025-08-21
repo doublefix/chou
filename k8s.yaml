@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend-chb
-        image: harbor.openpaper.co/chess/chb-web:20250806
+        image: harbor.openpaper.co/chess/chb-web:20250821
         ports:
         - name: http
           containerPort: 3000
