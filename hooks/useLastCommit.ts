@@ -1,7 +1,6 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
 
-// 定义PayloadCommit类型
 export interface PayloadCommit {
   id: string;
   message: string;
@@ -29,7 +28,6 @@ export interface PayloadCommit {
   modified: null | string[];
 }
 
-// 定义Branch类型（根据API文档）
 export interface Branch {
   name: string;
   commit: PayloadCommit;
@@ -62,15 +60,12 @@ export function useLastCommit(
     enabled ? `/api/v1/repos/${owner}/${repo}/branches/${branch}` : null,
     fetcher,
     {
-      // 可以添加额外的配置，比如错误重试策略
       shouldRetryOnError: (error) => {
-        // 404错误不重试，因为分支不存在
         return !error.message.includes("404");
       },
     }
   );
 
-  // 解析数据
   const branchData: Branch | null = data?.data || null;
 
   return {
