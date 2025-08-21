@@ -18,11 +18,19 @@ import {
 } from "@tanstack/react-table";
 import { StarIcon, GitBranchIcon } from "lucide-react";
 import {
+  differenceInMinutes,
+  differenceInHours,
+  differenceInDays,
+  differenceInMonths,
+  differenceInYears,
+} from "date-fns";
+import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
   FilterIcon,
+  ClockIcon,
   PlusIcon,
   ListRestart,
   XIcon,
@@ -563,8 +571,24 @@ export function DataTable({
 }
 
 function RowContent({ item }: { item: z.infer<typeof schema> }) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+
+    const minutes = differenceInMinutes(now, date);
+    if (minutes < 60) return `${minutes} min${minutes > 1 ? "s" : ""} ago`;
+
+    const hours = differenceInHours(now, date);
+    if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+
+    const days = differenceInDays(now, date);
+    if (days < 30) return `${days} day${days > 1 ? "s" : ""} ago`;
+
+    const months = differenceInMonths(now, date);
+    if (months < 12) return `${months} month${months > 1 ? "s" : ""} ago`;
+
+    const years = differenceInYears(now, date);
+    return `${years} year${years > 1 ? "s" : ""} ago`;
   };
 
   const getInitials = (name: string) => {
@@ -574,41 +598,40 @@ function RowContent({ item }: { item: z.infer<typeof schema> }) {
   return (
     <div className="p-4 space-y-3">
       <div className="flex items-center justify-between">
+        {/* 左侧：头像 + 名称 */}
         <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-6 w-6">
             <AvatarFallback>{getInitials(item.owner.login)}</AvatarFallback>
           </Avatar>
 
           <TableCellViewer item={item} />
         </div>
 
+        {/* 右侧：Star 按钮 */}
         <Button size="sm" variant="outline" className="gap-1">
           <StarIcon className="h-4 w-4" />
           Star
         </Button>
       </div>
 
+      {/* 描述 */}
       <div className="text-sm text-muted-foreground">
-        {item.description || "No description provided"}
+        {item.description || ""}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Badge variant={item.private ? "secondary" : "outline"}>
-          {item.private ? "Private" : "Public"}
-        </Badge>
-        {item.archived && <Badge variant="destructive">Archived</Badge>}
-        <Badge variant="outline">
-          <GitBranchIcon className="h-3 w-3 mr-1" />
-          {item.default_branch || "main"}
-        </Badge>
-      </div>
-
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      {/* 底部信息：左对齐 */}
+      <div className="flex items-center gap-6 text-sm text-muted-foreground">
+        {/* Stars 一组 */}
         <div className="flex items-center gap-1">
-          <StarIcon className="h-4 w-4 text-yellow-500" />
-          <span>{item.stars_count} stars</span>
+          <ClockIcon className="h-4 w-4" />
+          <span>Last updated {formatRelativeTime(item.updated_at)}</span>
         </div>
-        <div>Last updated: {formatDate(item.updated_at)}</div>
+        <div className="flex items-center gap-1">
+          <StarIcon className="h-4 w-4" />
+          <span>{item.stars_count}</span>
+        </div>
+
+        {/* 更新时间一组 */}
       </div>
     </div>
   );
