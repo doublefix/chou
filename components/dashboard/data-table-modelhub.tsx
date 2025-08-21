@@ -355,9 +355,7 @@ export function DataTable({
   return (
     <div className="flex flex-col lg:flex-row w-full">
       <div className="hidden lg:block w-96 ml-4 rounded-lg shrink-0">
-        <ScrollArea className="h-[calc(100vh-4rem)]">
-          <FilterPanel />
-        </ScrollArea>
+        <FilterPanel />
       </div>
 
       <div className="flex-1">
