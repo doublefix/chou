@@ -387,7 +387,7 @@ export function DataTable({
 
   return (
     <div className="flex flex-col lg:flex-row w-full">
-      <div className="hidden lg:block w-96 ml-4 rounded-lg shrink-0">
+      <div className="w-full sm:w-72 lg:w-96 ml-0 lg:ml-6 rounded-lg shrink-0">
         <FilterPanel />
       </div>
 
