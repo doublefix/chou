@@ -14,6 +14,7 @@ import {
 import { useRepoContents } from "@/hooks/useRepoContent";
 import { useRepoDetailInfo } from "@/hooks/useRepoDetailInfo";
 import { useFileContent } from "@/hooks/useRepoFileContent";
+import { useLastCommit } from "@/hooks/useLastCommit";
 import {
   StarIcon,
   GitBranchIcon,
@@ -197,6 +198,11 @@ export default function RepoDetailPage() {
     typeof repoName === "string" ? repoName : "",
     currentPath,
     { ref: repoDetail?.default_branch }
+  );
+
+  const { lastCommit, error, isLoading, mutate } = useLastCommit(
+    "admin",
+    "opus-mt-en-fr-test-upload"
   );
 
   const hasReadme = contents?.some(
