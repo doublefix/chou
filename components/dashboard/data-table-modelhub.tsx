@@ -241,7 +241,7 @@ export function DataTable({
           className="h-8 gap-1 text-sm text-muted-foreground"
         >
           <XIcon className="h-4 w-4" />
-          Clear all
+          Reset
         </Button>
       </div>
 
@@ -391,9 +391,9 @@ export function DataTable({
               </TabsTrigger>
             </TabsList>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                <PlusIcon />
-                <span className="hidden lg:inline">Add Repository</span>
+              <Button variant="outline">
+                <PlusIcon className="w-4 h-4" />
+                <span className="hidden lg:inline ml-2">Add Repository</span>
               </Button>
             </div>
           </div>
