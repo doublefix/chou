@@ -24,6 +24,7 @@ import {
   ChevronsRightIcon,
   FilterIcon,
   PlusIcon,
+  ListRestart,
   XIcon,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -43,7 +44,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 
 import {
   Table,
@@ -54,8 +54,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const schema = z.object({
   id: z.number(),
@@ -215,67 +213,71 @@ export function DataTable({
     });
   };
 
-  const clearAllFilters = () => {
-    setFilters({
-      search: "",
-      owners: [],
-      archived: null,
-      private: null,
-    });
-  };
-
   const FilterPanel = () => (
     <div className="flex flex-col gap-6 p-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Repository Filters</h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={clearAllFilters}
-          disabled={
-            !filters.search &&
-            filters.owners.length === 0 &&
-            filters.archived === null &&
-            filters.private === null
-          }
-          className="h-8 gap-1 text-sm text-muted-foreground"
-        >
-          <XIcon className="h-4 w-4" />
-          Reset
-        </Button>
       </div>
 
-      {/* 修改 Owners 部分为 Badge 样式 */}
-      <div className="space-y-3">
-        <Label>Owners</Label>
-        <div className="flex flex-wrap gap-2">
+      {/* Owners 筛选组 */}
+      <div className="space-y-2 relative">
+        <div className="flex items-center justify-between">
+          <Label>Owners</Label>
+          {filters.owners.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleFilterChange("owners", [])}
+              className="h-6 gap-1 text-xs text-muted-foreground absolute right-0 top-0"
+            >
+              <ListRestart className="h-3 w-3" />
+              Reset
+            </Button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2 mt-6">
           {uniqueOwners.map((owner) => (
             <Badge
               key={owner}
               variant="outline"
-              className={`cursor-pointer gap-1 px-2 py-1 transition-all ${
+              className={`cursor-pointer gap-1 px-2 py-1 transition-all min-w-[80px] text-center justify-center ${
                 filters.owners.includes(owner)
                   ? "border-2 border-primary font-medium"
                   : "border-muted-foreground/30"
               }`}
               onClick={() => toggleOwnerFilter(owner)}
             >
-              {owner}
-              {filters.owners.includes(owner) && (
-                <XIcon className="h-3 w-3 ml-1" />
-              )}
+              <span className="flex items-center justify-center">
+                {owner}
+                {filters.owners.includes(owner) && (
+                  <XIcon className="h-3 w-3 ml-1" />
+                )}
+              </span>
             </Badge>
           ))}
         </div>
       </div>
 
-      {/* 修改 Archived Status 部分为 Badge 样式 */}
-      <div className="space-y-3">
-        <Label>Archived Status</Label>
-        <div className="flex flex-wrap gap-2">
+      {/* Archived Status 筛选组 */}
+      <div className="space-y-2 relative">
+        <div className="flex items-center justify-between">
+          <Label>Archived Status</Label>
+          {filters.archived !== null && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleFilterChange("archived", null)}
+              className="h-6 gap-1 text-xs text-muted-foreground absolute right-0 top-0"
+            >
+              <ListRestart className="h-3 w-3" />
+              Reset
+            </Button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2 mt-6">
           <Badge
             variant="outline"
-            className={`cursor-pointer gap-1 px-2 py-1 transition-all ${
+            className={`cursor-pointer gap-1 px-2 py-1 transition-all min-w-[80px] text-center justify-center ${
               filters.archived === true
                 ? "border-2 border-primary font-medium"
                 : "border-muted-foreground/30"
@@ -287,12 +289,14 @@ export function DataTable({
               )
             }
           >
-            Archived
-            {filters.archived === true && <XIcon className="h-3 w-3 ml-1" />}
+            <span className="flex items-center justify-center">
+              Archived
+              {filters.archived === true && <XIcon className="h-3 w-3 ml-1" />}
+            </span>
           </Badge>
           <Badge
             variant="outline"
-            className={`cursor-pointer gap-1 px-2 py-1 transition-all ${
+            className={`cursor-pointer gap-1 px-2 py-1 transition-all min-w-[80px] text-center justify-center ${
               filters.archived === false
                 ? "border-2 border-primary font-medium"
                 : "border-muted-foreground/30"
@@ -304,19 +308,34 @@ export function DataTable({
               )
             }
           >
-            Active
-            {filters.archived === false && <XIcon className="h-3 w-3 ml-1" />}
+            <span className="flex items-center justify-center">
+              Active
+              {filters.archived === false && <XIcon className="h-3 w-3 ml-1" />}
+            </span>
           </Badge>
         </div>
       </div>
 
-      {/* 修改 Visibility 部分为 Badge 样式 */}
-      <div className="space-y-3">
-        <Label>Visibility</Label>
-        <div className="flex flex-wrap gap-2">
+      {/* Visibility 筛选组 */}
+      <div className="space-y-2 relative">
+        <div className="flex items-center justify-between">
+          <Label>Visibility</Label>
+          {filters.private !== null && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleFilterChange("private", null)}
+              className="h-6 gap-1 text-xs text-muted-foreground absolute right-0 top-0"
+            >
+              <ListRestart className="h-3 w-3" />
+              Reset
+            </Button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2 mt-6">
           <Badge
             variant="outline"
-            className={`cursor-pointer gap-1 px-2 py-1 transition-all ${
+            className={`cursor-pointer gap-1 px-2 py-1 transition-all min-w-[80px] text-center justify-center ${
               filters.private === true
                 ? "border-2 border-primary font-medium"
                 : "border-muted-foreground/30"
@@ -328,12 +347,14 @@ export function DataTable({
               )
             }
           >
-            Private
-            {filters.private === true && <XIcon className="h-3 w-3 ml-1" />}
+            <span className="flex items-center justify-center">
+              Private
+              {filters.private === true && <XIcon className="h-3 w-3 ml-1" />}
+            </span>
           </Badge>
           <Badge
             variant="outline"
-            className={`cursor-pointer gap-1 px-2 py-1 transition-all ${
+            className={`cursor-pointer gap-1 px-2 py-1 transition-all min-w-[80px] text-center justify-center ${
               filters.private === false
                 ? "border-2 border-primary font-medium"
                 : "border-muted-foreground/30"
@@ -345,13 +366,16 @@ export function DataTable({
               )
             }
           >
-            Public
-            {filters.private === false && <XIcon className="h-3 w-3 ml-1" />}
+            <span className="flex items-center justify-center">
+              Public
+              {filters.private === false && <XIcon className="h-3 w-3 ml-1" />}
+            </span>
           </Badge>
         </div>
       </div>
     </div>
   );
+
   return (
     <div className="flex flex-col lg:flex-row w-full">
       <div className="hidden lg:block w-96 ml-4 rounded-lg shrink-0">
