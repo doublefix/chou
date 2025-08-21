@@ -29,11 +29,12 @@ import {
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
-  FilterIcon,
+  Wrench,
   ClockIcon,
   PlusIcon,
   ListRestart,
   XIcon,
+  Rocket,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -608,10 +609,32 @@ function RowContent({ item }: { item: z.infer<typeof schema> }) {
         </div>
 
         {/* 右侧：Star 按钮 */}
-        <Button size="sm" variant="outline" className="gap-1">
-          <StarIcon className="h-4 w-4" />
-          Star
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 px-2 text-xs gap-1"
+          >
+            <StarIcon className="h-3 w-3" />
+            Star
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 px-2 text-xs gap-1"
+          >
+            <Wrench className="h-3 w-3" />
+            训练
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 px-2 text-xs gap-1"
+          >
+            <Rocket className="h-3 w-3" />
+            部署
+          </Button>
+        </div>
       </div>
 
       {/* 描述 */}
