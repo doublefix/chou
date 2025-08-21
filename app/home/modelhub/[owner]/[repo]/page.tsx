@@ -15,6 +15,7 @@ import { useRepoContents } from "@/hooks/useRepoContent";
 import { useRepoDetailInfo } from "@/hooks/useRepoDetailInfo";
 import { useFileContent } from "@/hooks/useRepoFileContent";
 import { useLastCommit } from "@/hooks/useLastCommit";
+import { useBranches } from "@/hooks/useRepoBranches";
 import {
   StarIcon,
   GitBranchIcon,
@@ -188,6 +189,15 @@ export default function RepoDetailPage() {
     typeof repoName === "string" ? repoName : ""
   );
 
+  const {
+    branches,
+    error: branchError,
+    isLoading: branchLoading,
+  } = useBranches(
+    typeof owner === "string" ? owner : "",
+    typeof repoName === "string" ? repoName : ""
+  );
+
   // 使用当前路径获取内容
   const {
     contents,
@@ -200,9 +210,14 @@ export default function RepoDetailPage() {
     { ref: repoDetail?.default_branch }
   );
 
-  const { lastCommit, error, isLoading, mutate } = useLastCommit(
-    "admin",
-    "opus-mt-en-fr-test-upload"
+  const {
+    lastCommit,
+    error: lastCommitError,
+    isLoading: lastCommitLoading,
+    mutate,
+  } = useLastCommit(
+    typeof owner === "string" ? owner : "",
+    typeof repoName === "string" ? repoName : ""
   );
 
   const hasReadme = contents?.some(
