@@ -11,6 +11,15 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useRepoContents } from "@/hooks/useRepoContent";
 import { useRepoDetailInfo } from "@/hooks/useRepoDetailInfo";
 import { useFileContent } from "@/hooks/useRepoFileContent";
@@ -442,10 +451,33 @@ export default function RepoDetailPage() {
           <div className="lg:col-span-3 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" className="gap-1">
-                  <GitBranchIcon className="h-4 w-4" />
-                  {repoDetail.default_branch}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={repoDetail.default_branch}
+                    onValueChange={(value) => {
+                      // 这里可以添加切换分支的逻辑
+                    }}
+                  >
+                    <SelectTrigger className="w-[100px] h-9">
+                      <div className="flex items-center gap-1">
+                        <GitBranchIcon className="h-4 w-4 mr-1" />
+                        <SelectValue placeholder="选择分支" />
+                      </div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {/* <SelectLabel>分支列表</SelectLabel> */}
+                        {branches?.map((branch) => (
+                          <SelectItem key={branch.name} value={branch.name}>
+                            <div className="flex items-center gap-2">
+                              {branch.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* 面包屑导航 */}
                 <Breadcrumb>
