@@ -87,11 +87,6 @@ const fileIcons: Record<string, React.ElementType> = {
   txt: FileIcon,
 };
 
-const getFileIcon = (fileName: string) => {
-  const extension = fileName.split(".").pop()?.toLowerCase() || "";
-  return fileIcons[extension] || FileIcon;
-};
-
 // 语法高亮组件
 const SyntaxHighlighter = ({
   content,
