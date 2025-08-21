@@ -1,0 +1,34 @@
+stages:
+  - docker
+
+variables:
+  IMAGE_NAME: harbor.openpaper.co/chess/chb-web
+  IMAGE_TAG: "${CI_COMMIT_SHORT_SHA}"
+  DOCKER_DRIVER: overlay2
+
+default:
+  image: harbor.openpaper.co/base/docker:28.3-dind
+  services:
+    - name: docker:28.3-dind
+      alias: docker
+      command: ["--storage-driver=overlay2"]
+      privileged: true
+
+before_script:
+  - docker info
+  - docker buildx create --use
+  - echo $HARBOR_PASSWORD | docker login harbor.openpaper.co --username $HARBOR_USERNAME --password-stdin
+  - export IMAGE_TAG=$(date +%Y%m%d)-$CI_COMMIT_SHORT_SHA
+  - echo "Building image: $IMAGE_NAME:$IMAGE_TAG"
+
+docker_build:
+  stage: docker
+  script:
+    - docker buildx build \
+      --platform linux/amd64 \
+      --cache-from=type=registry,ref=$IMAGE_NAME:cache \
+      --cache-to=type=registry,ref=$IMAGE_NAME:cache,mode=max \
+      -t $IMAGE_NAME:$IMAGE_TAG \
+      --push .
+  only:
+    - builder
