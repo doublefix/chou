@@ -373,10 +373,10 @@ export default function RepoDetailPage() {
               <div className="flex items-center gap-3">
                 <div>
                   <h1 className="text-2xl font-bold">
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground/60">
                       {repoDetail.owner.login}
                     </span>
-                    <span className="mx-2">/</span>
+                    <span className="mx-1 text-muted-foreground/60">/</span>
                     <span>{repoDetail.name}</span>
                   </h1>
                 </div>
