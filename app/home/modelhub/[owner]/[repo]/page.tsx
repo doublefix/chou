@@ -450,9 +450,6 @@ export default function RepoDetailPage() {
                 <Button variant="outline" size="sm" className="gap-1">
                   <GitBranchIcon className="h-4 w-4" />
                   {repoDetail.default_branch}
-                  <Badge variant="secondary" className="ml-1">
-                    default
-                  </Badge>
                 </Button>
 
                 {/* 面包屑导航 */}
