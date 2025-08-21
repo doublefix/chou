@@ -245,32 +245,6 @@ export function DataTable({
         </Button>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="search-filter">Search Repositories</Label>
-        <div className="relative">
-          <FilterIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            id="search-filter"
-            placeholder="Search by name, description, owner..."
-            value={filters.search}
-            onChange={(e) => handleFilterChange("search", e.target.value)}
-            className="pl-8"
-          />
-          {filters.search && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-1 top-1 h-6 w-6"
-              onClick={() => handleFilterChange("search", "")}
-            >
-              <XIcon className="h-3 w-3" />
-              <span className="sr-only">Clear search</span>
-            </Button>
-          )}
-        </div>
-      </div>
-      <Separator />
-
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label>Owners</Label>
